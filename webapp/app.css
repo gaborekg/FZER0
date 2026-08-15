@@ -254,18 +254,48 @@ body {
 
 /* --- Measure -------------------------------------------------------------- */
 
+/* One screenful, no scrolling: the two cards and the action divide the height
+   between them, and the bar chart takes whatever is left over. Everything on
+   this screen is live, so anything below the fold is something you are not
+   watching. */
+.screen[data-screen='measure'],
+[data-el='measure-body'] {
+  display: flex;
+  flex-direction: column;
+}
+
+.screen[data-screen='measure'] {
+  min-height: calc(100vh - var(--app-bar-height) - var(--tab-bar-height) - 2.4rem);
+  min-height: calc(100dvh - var(--app-bar-height) - var(--tab-bar-height) - 2.4rem);
+}
+
+[data-el='measure-body'] {
+  flex: 1;
+}
+
+/* The chart is the elastic part. The dial and the readouts have a natural
+   size; the bars are happy at any height. */
+[data-el='measure-body'] .frequency-card {
+  flex: 1;
+  min-height: 9rem;
+}
+
 /* Sticky rather than simply last: the content is taller than a phone screen,
    and a Stop button you have to scroll to find is a Stop button that gets
    pressed late. It sits in the flow and pins itself above the tab bar. */
+/* Full-bleed and fully opaque. A translucent bar over a bar chart is just an
+   unreadable bar chart — and this is the control that ends the recording, so
+   it has to be the most legible thing on the screen. Sticky only matters on a
+   viewport too short to fit the layout; normally the flex column below puts it
+   here anyway. */
 .record-bar {
   position: sticky;
-  bottom: calc(var(--tab-bar-height) + 0.5rem);
+  bottom: 0;
   z-index: 5;
-  margin: 1.25rem -0.35rem 0;
-  padding: 0.55rem 0.35rem 0.35rem;
-  background: rgba(240, 240, 245, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 1rem;
+  margin: auto -1rem 0;
+  padding: 0.7rem 1rem 0.2rem;
+  background: var(--ground);
+  border-top: 1px solid var(--line);
 }
 
 .record-actions {
@@ -404,7 +434,9 @@ body {
 .bar-track {
   width: 100%;
   flex: 1;
-  min-height: 6.5rem;
+  /* Low floor, because the track now grows with the card rather than setting
+     its height. */
+  min-height: 4rem;
   padding: 0;
   border: 0;
   background: var(--bar-track);
