@@ -208,12 +208,6 @@ body[data-screen='measure'] {
   margin-top: 0.7rem;
 }
 
-.card-rule {
-  margin: 0.6rem 0;
-  border: 0;
-  border-top: 1px solid var(--line);
-}
-
 .card-body {
   margin: 0 0 0.7rem;
   font-size: 0.85rem;
@@ -226,15 +220,6 @@ body[data-screen='measure'] {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--accent);
-}
-
-.stat-row {
-  display: flex;
-  gap: 0.7rem;
-}
-
-.stat-row .stat {
-  flex: 1;
 }
 
 .stat-column {
@@ -299,11 +284,24 @@ body[data-screen='measure'] {
   flex: 1;
 }
 
+/* Both cards are now the same shape: a column of readouts on the left, the
+   instrument filling the rest. The dial was stacked above its figures, which
+   cost it most of its height — and a 180-degree scale squeezed into a short
+   wide box is unreadable at exactly the moment you want to read it. */
+.volume-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.7rem;
+}
+
 [data-el='measure-body'] .volume-card {
   flex: 3 1 0;
-  display: flex;
-  flex-direction: column;
   min-height: 0;
+}
+
+.volume-card .stat-column .stat {
+  flex: 1;
+  justify-content: center;
 }
 
 [data-el='measure-body'] .frequency-card {
@@ -319,11 +317,6 @@ body[data-screen='measure'] {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-[data-el='measure-body'] .card-rule,
-[data-el='measure-body'] .stat-row {
-  flex: 0 0 auto;
 }
 
 /* Full-bleed and fully opaque. A translucent bar over a bar chart is just an
@@ -422,7 +415,7 @@ body[data-screen='measure'] {
 }
 
 .stat-column .stat {
-  width: 4.8rem;
+  width: 5.6rem;
 }
 
 .tone-play {
