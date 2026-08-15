@@ -7,8 +7,7 @@ const TITLES = { measure: 'FZER0', history: 'History', profile: 'Profile' };
 
 const store = createAppStore(window.localStorage);
 
-const navTitleEl = document.querySelector('[data-el="nav-title"]');
-const largeTitleEl = document.querySelector('[data-el="large-title"]');
+const titleEl = document.querySelector('[data-el="screen-title"]');
 const screens = Object.fromEntries(
   ['measure', 'history', 'profile'].map((name) => [
     name,
@@ -42,30 +41,17 @@ function show(name) {
     else tab.removeAttribute('aria-current');
   });
 
-  // Only Measure is titled with the product name; the other two are named
-  // after themselves, and the tint belongs to the brand rather than to any
-  // heading.
-  [navTitleEl, largeTitleEl].forEach((element) => {
-    element.textContent = TITLES[name];
-    if (name === 'measure') element.dataset.brand = 'true';
-    else delete element.dataset.brand;
-  });
+  titleEl.textContent = TITLES[name];
+  // Only Measure shows the product name; the other two are screen names, and
+  // the accent colouring belongs to the brand, not to a heading.
+  if (name === 'measure') delete titleEl.dataset.plain;
+  else titleEl.dataset.plain = 'true';
 
   if (name === 'history') history.render();
   if (name === 'profile') profile.render();
 
   window.scrollTo(0, 0);
-  syncScrollState();
 }
-
-// The inline title fades in only once the large one has scrolled away — the
-// standard iOS navigation bar behaviour, which is also the only thing keeping
-// the two titles from being on screen at the same time.
-function syncScrollState() {
-  document.body.dataset.scrolled = window.scrollY > 28 ? 'true' : 'false';
-}
-
-window.addEventListener('scroll', syncScrollState, { passive: true });
 
 document.querySelectorAll('[data-tab]').forEach((tab) => {
   tab.addEventListener('click', () => show(tab.dataset.tab));

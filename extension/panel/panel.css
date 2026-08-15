@@ -251,26 +251,10 @@
   justify-content: center;
 }
 
-/* The dial takes its ink from `color` and its two pointers from classes, so
-   the same SVG can sit on this light card or on the web app's dark one. These
-   values are what it has always looked like here. */
 .db-meter-svg {
   width: 100%;
   height: 100%;
   display: block;
-  color: #1a1a1a;
-}
-
-.db-meter-svg .meter-muted {
-  color: #8b8f95;
-}
-
-.db-meter-svg .meter-target {
-  color: #2b6b4a;
-}
-
-.db-meter-svg .meter-needle {
-  color: #d32f2f;
 }
 
 .db-meter-svg line[data-el="needle"] {

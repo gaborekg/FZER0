@@ -1,65 +1,23 @@
-/* ─────────────────────────────────────────────────────────────────────────
-   iOS system palette and type scale.
-
-   The values are Apple's own: system colours in both appearances, the Human
-   Interface Guidelines text styles at their default sizes, and inset grouped
-   list metrics (10pt corners, 16pt margins, 44pt minimum row). Nothing here is
-   an approximation of the look — it is the look.
-   ───────────────────────────────────────────────────────────────────────── */
+/* iOS-grouped-list palette, with the app's blue as the single accent and one
+   warm counterpoint for the average-volume figure. */
 :root {
-  color-scheme: light dark;
+  --ground: #f0f0f5;
+  --card: #ffffff;
+  --field: #eaeef8;
+  --ink: #16181d;
+  --ink-2: #6c707a;
+  --line: #e2e2e8;
+  --accent: #2f6fed;
+  --accent-soft: #e6edfd;
+  --warm: #e2622c;
+  --green: #2b8a5a;
+  --green-soft: #e4f2ea;
+  --danger: #c8382b;
+  --bar-track: #d6d7dd;
+  --bar-fill: #4a4a4f;
 
-  /* System colours — light appearance */
-  --blue: #007aff;
-  --red: #ff3b30;
-  --green: #34c759;
-  --orange: #ff9500;
-
-  --label: #000000;
-  --label-2: rgba(60, 60, 67, 0.6);
-  --label-3: rgba(60, 60, 67, 0.3);
-  --separator: rgba(60, 60, 67, 0.29);
-  --fill-2: rgba(120, 120, 128, 0.12);
-
-  --bg-grouped: #f2f2f7;
-  --bg-card: #ffffff;
-  --bar-material: rgba(249, 249, 249, 0.94);
-
-  /* Text styles */
-  --large-title: 2.125rem; /* 34pt bold */
-  --title-3: 1.25rem;      /* 20pt */
-  --headline: 1.0625rem;   /* 17pt semibold */
-  --body: 1.0625rem;       /* 17pt */
-  --subhead: 0.9375rem;    /* 15pt */
-  --footnote: 0.8125rem;   /* 13pt */
-  --caption-1: 0.75rem;    /* 12pt */
-  --caption-2: 0.6875rem;  /* 11pt */
-
-  /* Metrics */
-  --margin: 1rem;          /* 16pt */
-  --corner: 0.625rem;      /* 10pt, inset grouped */
-  --row-min: 2.75rem;      /* 44pt */
-  --nav-height: 2.75rem;
-  --tab-height: 3.0625rem; /* 49pt */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --blue: #0a84ff;
-    --red: #ff453a;
-    --green: #30d158;
-    --orange: #ff9f0a;
-
-    --label: #ffffff;
-    --label-2: rgba(235, 235, 245, 0.6);
-    --label-3: rgba(235, 235, 245, 0.3);
-    --separator: rgba(84, 84, 88, 0.65);
-    --fill-2: rgba(120, 120, 128, 0.24);
-
-    --bg-grouped: #000000;
-    --bg-card: #1c1c1e;
-    --bar-material: rgba(28, 28, 30, 0.94);
-  }
+  --app-bar-height: 2.95rem;
+  --tab-bar-height: 4.25rem;
 }
 
 * {
@@ -68,108 +26,70 @@
 
 body {
   margin: 0;
-  background: var(--bg-grouped);
-  color: var(--label);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
-  font-size: var(--body);
-  line-height: 1.35;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Views are switched by this attribute, so it outranks every layout rule
-   below — including the flex column on the Profile screen, which matches at
-   the same specificity and would otherwise win on order alone. */
-[hidden] {
-  display: none !important;
 }
 
 :focus-visible {
-  outline: 2px solid var(--blue);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 
-button {
-  font: inherit;
-  cursor: pointer;
-}
+/* --- Chrome --------------------------------------------------------------- */
 
-/* ── Navigation bar ─────────────────────────────────────────────────────
-   Large title in the content, collapsing to a centred inline title on scroll —
-   the standard iOS navigation behaviour. */
-
-.nav-bar {
-  position: fixed;
+.app-bar {
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
-  z-index: 20;
-  height: calc(var(--nav-height) + env(safe-area-inset-top));
-  padding-top: env(safe-area-inset-top);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bar-material);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-  /* Hairline: 0.33pt on device, which is what a sub-pixel border buys us. */
-  border-bottom: 0.5px solid transparent;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
+  z-index: 10;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  background: rgba(240, 240, 245, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
 }
 
-body[data-scrolled='true'] .nav-bar {
-  opacity: 1;
-  border-bottom-color: var(--separator);
-}
-
-.nav-title {
+.app-bar h1 {
   margin: 0;
-  font-size: var(--headline);
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+
+/* The title is the product name on Measure and a plain screen name elsewhere. */
+.app-bar h1[data-plain] {
+  color: var(--ink);
   letter-spacing: -0.01em;
 }
 
-.large-title {
-  margin: 0 0 0.5rem;
-  padding: 0 var(--margin);
-  font-size: var(--large-title);
-  font-weight: 700;
-  letter-spacing: -0.026em;
-  line-height: 1.15;
-}
-
-/* Measure is the only screen titled with the product name rather than a
-   description of itself, so it is the only one that carries the tint. */
-.large-title[data-brand='true'],
-.nav-title[data-brand='true'] {
-  color: var(--blue);
-}
-
 .screens {
-  max-width: 34rem;
+  padding: 0.9rem 1rem calc(var(--tab-bar-height) + 1.5rem);
+  max-width: 30rem;
   margin: 0 auto;
-  padding: calc(var(--nav-height) + env(safe-area-inset-top) + 0.5rem) 0
-    calc(var(--tab-height) + env(safe-area-inset-bottom) + 1.5rem);
 }
 
-/* ── Tab bar ────────────────────────────────────────────────────────────── */
+/* Views are switched by this attribute, so it has to outrank every layout rule
+   below — including `.screen[data-screen='profile'] { display: flex }`, which
+   matches at the same specificity and would otherwise win on order alone. */
+[hidden] {
+  display: none !important;
+}
 
 .tab-bar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 20;
+  z-index: 10;
   display: flex;
-  height: calc(var(--tab-height) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
-  background: var(--bar-material);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-  border-top: 0.5px solid var(--separator);
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
 }
 
 .tab {
@@ -177,146 +97,90 @@ body[data-scrolled='true'] .nav-bar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.125rem;
-  padding: 0.3rem 0 0;
+  gap: 0.3rem;
+  padding: 0.6rem 0 0.7rem;
   background: none;
   border: 0;
-  font-size: var(--caption-2);
-  letter-spacing: 0.005em;
-  color: var(--label-2);
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--ink-2);
+  cursor: pointer;
 }
 
-.tab[aria-current='page'] {
-  color: var(--blue);
-}
-
+/* Stroke, not fill, and coloured from the button — so the icon follows the
+   label into the accent on the selected tab without a second rule. */
 .tab-icon {
   display: block;
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
-/* Outline when idle, filled when selected — the SF Symbols convention that
-   makes the selected tab legible before the tint registers. */
-.tab-icon-filled,
-.tab[aria-current='page'] .tab-icon-outline {
-  display: none;
-}
-
-.tab[aria-current='page'] .tab-icon-filled {
-  display: block;
-}
-
-.tab-icon-outline {
+  width: 1.5rem;
+  height: 1.5rem;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.7;
+  stroke-width: 1.9;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.tab-icon-filled {
-  fill: currentColor;
-  stroke: none;
+.tab[aria-current='page'] {
+  color: var(--accent);
+  font-weight: 600;
 }
 
-/* ── Inset grouped lists ────────────────────────────────────────────────── */
+/* The weight bump does the work a filled variant would do on iOS: the selected
+   tab reads as selected even before you register the colour. */
+.tab[aria-current='page'] .tab-icon {
+  stroke-width: 2.4;
+}
+
+.tab[aria-current='page'] .tab-name {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* --- Shared blocks -------------------------------------------------------- */
 
 .group-title {
-  margin: 1.75rem var(--margin) 0.4375rem;
-  font-size: var(--footnote);
-  font-weight: 400;
-  line-height: 1.3;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--label-2);
+  margin: 1.1rem 0 0.5rem 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .screen > .group-title:first-child {
-  margin-top: 0.5rem;
+  margin-top: 0.2rem;
 }
 
 .card {
-  background: var(--bg-card);
-  border-radius: var(--corner);
-  margin: 0 var(--margin);
-  padding: var(--margin);
-  overflow: hidden;
+  background: var(--card);
+  border-radius: 1rem;
+  padding: 0.9rem;
 }
 
 .card + .card {
-  margin-top: 0.5rem;
+  margin-top: 0.7rem;
 }
 
 .card-rule {
-  margin: 0.75rem calc(var(--margin) * -1) 0.75rem 0;
+  margin: 0.6rem 0;
   border: 0;
-  border-top: 0.5px solid var(--separator);
+  border-top: 1px solid var(--line);
 }
 
 .card-body {
-  margin: 0 0 0.75rem;
-  font-size: var(--subhead);
-  color: var(--label-2);
+  margin: 0 0 0.7rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
 }
 
 .card-status {
   margin: 0.5rem 0 0;
   min-height: 1.2rem;
-  font-size: var(--footnote);
-  color: var(--label-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
 }
-
-/* Rows: full-bleed separators that start where the label starts, inset from
-   the leading edge — the detail that makes a list look like a system list. */
-.rows {
-  padding: 0;
-}
-
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: var(--row-min);
-  padding: 0.4rem var(--margin);
-  border-bottom: 0.5px solid var(--separator);
-}
-
-.row:last-child {
-  border-bottom: 0;
-}
-
-.row-label {
-  font-size: var(--body);
-}
-
-.row-input {
-  flex: 1;
-  min-width: 0;
-  text-align: right;
-  font: inherit;
-  color: var(--blue);
-  background: none;
-  border: 0;
-  padding: 0;
-}
-
-.row-input:disabled {
-  color: var(--label-3);
-}
-
-select.row-input {
-  text-align-last: right;
-  appearance: none;
-}
-
-/* ── Statistics ─────────────────────────────────────────────────────────── */
 
 .stat-row {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.7rem;
 }
 
 .stat-row .stat {
@@ -331,66 +195,60 @@ select.row-input {
 }
 
 .stat {
-  background: var(--fill-2);
-  border-radius: var(--corner);
-  padding: 0.5rem 0.7rem 0.6rem;
+  background: var(--field);
+  border-radius: 0.8rem;
+  padding: 0.5rem 0.7rem 0.65rem;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
 .stat-label {
-  font-size: var(--caption-1);
-  font-weight: 600;
-  color: var(--label-2);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 .stat-value {
-  /* Rounded is the face Apple uses for readouts and numerals. */
-  font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-  font-size: 1.75rem;
+  font-size: 1.6rem;
   font-weight: 500;
   line-height: 1.1;
-  color: var(--blue);
+  color: var(--accent);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .stat-value-warm {
-  color: var(--orange);
+  color: var(--warm);
 }
 
-/* ── Measure ────────────────────────────────────────────────────────────── */
+/* --- Measure -------------------------------------------------------------- */
 
 .record-bar {
-  margin: 0 var(--margin) 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .record-button {
   display: block;
   width: 100%;
-  min-height: var(--row-min);
-  padding: 0.75rem;
-  font-size: var(--headline);
-  font-weight: 600;
+  padding: 0.85rem;
+  font: inherit;
+  font-weight: 650;
   color: #ffffff;
-  background: var(--blue);
+  background: var(--accent);
   border: 0;
-  border-radius: 0.75rem;
-}
-
-.record-button:active {
-  opacity: 0.8;
+  border-radius: 0.85rem;
+  cursor: pointer;
 }
 
 .record-button[data-recording='true'] {
-  background: var(--red);
+  background: var(--danger);
 }
 
 .record-status {
-  margin: 0.5rem 0.25rem 0;
-  font-size: var(--footnote);
-  color: var(--label-2);
+  margin: 0.5rem 0.2rem 0;
+  font-size: 0.8rem;
+  color: var(--ink-2);
 }
 
 .db-meter-svg {
@@ -398,19 +256,6 @@ select.row-input {
   width: 100%;
   max-width: 17rem;
   margin: 0 auto;
-  color: var(--label);
-}
-
-.db-meter-svg .meter-muted {
-  color: var(--label-3);
-}
-
-.db-meter-svg .meter-target {
-  color: var(--green);
-}
-
-.db-meter-svg .meter-needle {
-  color: var(--red);
 }
 
 .db-meter-svg line[data-el='needle'] {
@@ -420,39 +265,41 @@ select.row-input {
 .frequency-card {
   display: flex;
   align-items: stretch;
-  gap: 0.75rem;
+  gap: 0.7rem;
 }
 
 .stat-column .stat {
-  width: 5rem;
+  width: 5.2rem;
 }
 
 .tone-play {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
   margin-top: auto;
 }
 
 .play-button {
-  width: 3.25rem;
-  height: 3.25rem;
+  width: 3.1rem;
+  height: 3.1rem;
   border-radius: 50%;
   border: 0;
-  background: var(--fill-2);
-  color: var(--blue);
+  background: var(--accent-soft);
+  color: var(--accent);
   font-size: 1.1rem;
   line-height: 1;
+  cursor: pointer;
 }
 
 .play-button:active {
-  opacity: 0.6;
+  background: #d2e0fb;
 }
 
 .tone-caption {
-  font-size: var(--caption-2);
-  color: var(--label-2);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--ink-2);
 }
 
 .note-bars {
@@ -477,8 +324,8 @@ select.row-input {
   width: 100%;
   flex: 1;
   min-height: 6.5rem;
-  background: var(--fill-2);
-  border-radius: 0.25rem;
+  background: var(--bar-track);
+  border-radius: 0.3rem;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
@@ -488,114 +335,98 @@ select.row-input {
   display: block;
   width: 100%;
   height: 0;
-  background: var(--label-2);
-  border-radius: 0.25rem;
+  background: var(--bar-fill);
+  border-radius: 0.3rem;
   transition: height 0.15s linear;
 }
 
-/* The note being spoken right now — the one thing in the chart about this
-   instant rather than the last few seconds. */
+/* The note being spoken right now, called out in the accent — the one thing
+   in the chart that is about this instant rather than the last few seconds. */
 .note-bar.is-current .bar-fill {
-  background: var(--blue);
+  background: var(--accent);
 }
 
 .note-bar.in-zone .bar-track {
-  background: color-mix(in srgb, var(--blue) 18%, transparent);
+  background: #cfdcf6;
 }
 
 .note-bar.is-target .bar-track {
-  box-shadow: inset 0 0 0 1.5px var(--blue);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
 .bar-label {
-  font-size: var(--caption-2);
-  font-weight: 500;
-  color: var(--label-2);
+  font-size: 0.5rem;
+  font-weight: 700;
   white-space: nowrap;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
 
 .note-bar.in-zone .bar-label {
-  color: var(--blue);
+  color: var(--accent);
 }
 
-/* ── History ────────────────────────────────────────────────────────────── */
+/* --- History -------------------------------------------------------------- */
 
 .trend-empty {
   margin: 0;
-  font-size: var(--subhead);
-  color: var(--label-2);
+  font-size: 0.88rem;
+  color: var(--ink-2);
 }
 
 .trend-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
+  gap: 0.7rem;
 }
 
 .trend-item {
-  background: var(--fill-2);
-  border-radius: var(--corner);
+  background: var(--field);
+  border-radius: 0.8rem;
   padding: 0.55rem 0.7rem 0.7rem;
 }
 
 .trend-item .stat-label {
   display: block;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
 }
 
 .trend-verdict {
   display: block;
-  font-family: ui-rounded, -apple-system, system-ui, sans-serif;
-  font-size: var(--title-3);
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 650;
   line-height: 1.2;
 }
 
 .trend-verdict[data-mood='good'] { color: var(--green); }
-.trend-verdict[data-mood='away'] { color: var(--orange); }
-.trend-verdict[data-mood='flat'] { color: var(--label-2); }
+.trend-verdict[data-mood='away'] { color: var(--warm); }
+.trend-verdict[data-mood='flat'] { color: var(--ink-2); }
 
 .trend-detail {
   display: block;
   margin-top: 0.15rem;
-  font-size: var(--caption-1);
-  color: var(--label-2);
+  font-size: 0.72rem;
+  color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
 .trend-note {
-  margin: 0.75rem 0 0;
-  font-size: var(--footnote);
-  color: var(--label-2);
-}
-
-/* Sessions are one grouped list, so they share a card and are divided by
-   hairlines rather than floating as separate blocks. */
-.session-list {
-  background: var(--bg-card);
-  border-radius: var(--corner);
-  margin: 0 var(--margin);
-  overflow: hidden;
+  margin: 0.7rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-2);
 }
 
 .session {
-  display: block;
   width: 100%;
   text-align: left;
-  background: none;
+  font: inherit;
+  background: var(--card);
   border: 0;
-  border-bottom: 0.5px solid var(--separator);
-  padding: 0.7rem var(--margin);
-}
-
-.session:last-child {
-  border-bottom: 0;
-}
-
-.session:active {
-  background: var(--fill-2);
+  border-radius: 1rem;
+  padding: 0.8rem 0.9rem;
+  margin-bottom: 0.6rem;
+  cursor: pointer;
+  display: block;
 }
 
 .session-head {
@@ -606,60 +437,117 @@ select.row-input {
 }
 
 .session-date {
-  font-size: var(--body);
-  font-weight: 400;
+  font-weight: 650;
+  font-size: 0.92rem;
 }
 
 .session-duration {
-  font-size: var(--subhead);
-  color: var(--label-2);
+  font-size: 0.78rem;
+  color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
 .session-figures {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.1rem 1.1rem;
-  margin-top: 0.3rem;
-  font-size: var(--footnote);
-  color: var(--label-2);
+  gap: 0.15rem 1.1rem;
+  margin-top: 0.45rem;
+  font-size: 0.78rem;
+  color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
 
 .session-figures b {
-  color: var(--label);
-  font-weight: 600;
+  color: var(--ink);
+  font-weight: 650;
 }
 
 .session-detail {
-  margin: 0.6rem 0 0;
+  margin-top: 0.6rem;
   padding-top: 0.6rem;
-  border-top: 0.5px solid var(--separator);
+  border-top: 1px solid var(--line);
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 0.3rem 0.9rem;
-  font-size: var(--subhead);
+  gap: 0.25rem 0.9rem;
+  font-size: 0.8rem;
 }
 
 .session-detail dt {
-  color: var(--label-2);
+  color: var(--ink-2);
 }
 
 .session-detail dd {
   margin: 0;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .empty {
   margin: 0;
-  padding: 1.75rem var(--margin);
+  padding: 1.3rem 0.9rem;
   text-align: center;
-  font-size: var(--subhead);
-  color: var(--label-2);
+  font-size: 0.88rem;
+  color: var(--ink-2);
+  background: var(--card);
+  border-radius: 1rem;
 }
 
-/* ── Profile ────────────────────────────────────────────────────────────── */
+/* --- Profile -------------------------------------------------------------- */
+
+.rows {
+  padding: 0 0.9rem;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row-label {
+  font-size: 0.95rem;
+}
+
+.row-input {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font: inherit;
+  font-size: 0.95rem;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+select.row-input {
+  text-align-last: right;
+  appearance: none;
+}
+
+.level {
+  height: 0.55rem;
+  background: var(--field);
+  border-radius: 0.3rem;
+  overflow: hidden;
+}
+
+.level span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 0.3rem;
+  transition: width 0.08s linear;
+}
 
 /* The therapist CTA sits at the foot of the screen rather than trailing the
    settings, so it reads as the way out of the app instead of one more control.
@@ -668,87 +556,62 @@ select.row-input {
 .screen[data-screen='profile'] {
   display: flex;
   flex-direction: column;
-  min-height: calc(
-    100vh - var(--nav-height) - var(--tab-height) - 2rem
-  );
-  min-height: calc(
-    100dvh - var(--nav-height) - var(--tab-height) - 2rem
-  );
-}
-
-.level {
-  height: 0.5rem;
-  background: var(--fill-2);
-  border-radius: 0.25rem;
-  overflow: hidden;
-}
-
-.level span {
-  display: block;
-  width: 0;
-  height: 100%;
-  background: var(--blue);
-  border-radius: 0.25rem;
-  transition: width 0.08s linear;
-}
-
-/* A grouped cell whose whole content is a tinted verb: the system's own
-   pattern for a single action sitting in a list. */
-.action-cell {
-  display: block;
-  width: 100%;
-  min-height: var(--row-min);
-  padding: 0.75rem var(--margin);
-  text-align: center;
-  font-size: var(--body);
-  color: var(--blue);
-  background: var(--bg-card);
-  border: 0;
-  border-radius: var(--corner);
-  margin: 0 var(--margin);
-}
-
-.action-cell:active {
-  background: var(--fill-2);
-}
-
-.action-cell.destructive {
-  color: var(--red);
+  min-height: calc(100vh - var(--app-bar-height) - var(--tab-bar-height) - 2.4rem);
+  min-height: calc(100dvh - var(--app-bar-height) - var(--tab-bar-height) - 2.4rem);
 }
 
 .profile-footer {
   margin-top: auto;
-  padding-top: 1.75rem;
+  padding-top: 1.5rem;
 }
 
 .disclaimer {
-  margin: 0 var(--margin) 0.75rem;
-  font-size: var(--footnote);
-  color: var(--label-2);
+  margin: 0 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  color: var(--ink-2);
 }
 
 .cta {
   display: block;
-  width: calc(100% - var(--margin) * 2);
-  min-height: var(--row-min);
-  margin: 0 var(--margin);
-  padding: 0.75rem;
-  font-size: var(--headline);
-  font-weight: 600;
+  width: 100%;
+  padding: 0.85rem;
+  font: inherit;
+  font-weight: 650;
   color: #ffffff;
-  background: var(--blue);
+  background: var(--accent);
   border: 0;
-  border-radius: 6.25rem; /* capsule */
+  border-radius: 2rem;
+  cursor: pointer;
 }
 
-.cta:active {
-  opacity: 0.8;
+.wide-button {
+  display: block;
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.7rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 0;
+  border-radius: 0.7rem;
+  cursor: pointer;
+}
+
+.wide-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.wide-button.danger {
+  margin-top: 1.6rem;
+  color: var(--danger);
+  background: #fbe9e7;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .level span,
   .bar-fill,
-  .nav-bar,
   .db-meter-svg line[data-el='needle'] {
     transition: none;
   }

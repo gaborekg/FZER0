@@ -52,7 +52,7 @@ export function buildDbMeterSvg() {
     ticks +=
       `<line x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" ` +
       `x2="${outer.x.toFixed(1)}" y2="${outer.y.toFixed(1)}" ` +
-      `stroke="currentColor" stroke-width="${isMajor ? 1.6 : 0.8}" />`;
+      `stroke="#1a1a1a" stroke-width="${isMajor ? 1.6 : 0.8}" />`;
 
     if (isMajor) {
       const at = meterPoint(db, METER.rLabel);
@@ -60,7 +60,7 @@ export function buildDbMeterSvg() {
       const rotation = 90 - (meterAngleRad(db) * 180) / Math.PI;
       labels +=
         `<text x="${at.x.toFixed(1)}" y="${at.y.toFixed(1)}" font-size="11" ` +
-        `text-anchor="middle" dominant-baseline="middle" fill="currentColor" ` +
+        `text-anchor="middle" dominant-baseline="middle" fill="#1a1a1a" ` +
         `transform="rotate(${rotation.toFixed(1)} ${at.x.toFixed(1)} ${at.y.toFixed(1)})">${Math.round(db)}</text>`;
     }
   }
@@ -81,36 +81,36 @@ export function buildDbMeterSvg() {
     <svg viewBox="0 0 240 172" class="db-meter-svg">
       <path d="M ${(METER.cx - METER.rArc).toFixed(1)} ${METER.cy}
                A ${METER.rArc} ${METER.rArc} 0 0 1 ${(METER.cx + METER.rArc).toFixed(1)} ${METER.cy}"
-            fill="none" stroke="currentColor" stroke-width="1.6" />
+            fill="none" stroke="#1a1a1a" stroke-width="1.6" />
       ${ticks}
       ${labels}
 
       <path d="M ${bandStart.x.toFixed(1)} ${bandStart.y.toFixed(1)}
                A ${METER.rBandArc} ${METER.rBandArc} 0 0 1 ${bandEnd.x.toFixed(1)} ${bandEnd.y.toFixed(1)}"
-            fill="none" class="meter-muted" stroke="currentColor" stroke-width="0.9" />
+            fill="none" stroke="#8b8f95" stroke-width="0.9" />
       <polyline points="${bandPeakLeft.x.toFixed(1)},${bandPeakLeft.y.toFixed(1)}
                         ${bandPeak.x.toFixed(1)},${bandPeak.y.toFixed(1)}
                         ${bandPeakRight.x.toFixed(1)},${bandPeakRight.y.toFixed(1)}"
-                fill="none" class="meter-muted" stroke="currentColor" stroke-width="0.9" />
-      <text x="${minLabel.x.toFixed(1)}" y="${minLabel.y.toFixed(1)}" font-size="7" class="meter-muted" fill="currentColor"
+                fill="none" stroke="#8b8f95" stroke-width="0.9" />
+      <text x="${minLabel.x.toFixed(1)}" y="${minLabel.y.toFixed(1)}" font-size="7" fill="#8b8f95"
             text-anchor="middle" transform="rotate(-60 ${minLabel.x.toFixed(1)} ${minLabel.y.toFixed(1)})">MIN</text>
-      <text x="${maxLabel.x.toFixed(1)}" y="${maxLabel.y.toFixed(1)}" font-size="7" class="meter-muted" fill="currentColor"
+      <text x="${maxLabel.x.toFixed(1)}" y="${maxLabel.y.toFixed(1)}" font-size="7" fill="#8b8f95"
             text-anchor="middle">MAX</text>
 
       <text x="${METER.cx}" y="${METER.cy + 26}" font-size="17" font-weight="700"
-            text-anchor="middle" fill="currentColor">dB</text>
+            text-anchor="middle" fill="#1a1a1a">dB</text>
 
       <line data-el="target-mark" x1="${METER.cx}" y1="${METER.cy - 42}" x2="${METER.cx}" y2="${needleTip}"
-            class="meter-target" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke="#2b6b4a" stroke-width="2.5" stroke-linecap="round"
             style="transform-origin: ${METER.cx}px ${METER.cy}px;" />
 
       <line data-el="needle" x1="${METER.cx}" y1="${METER.cy + 14}" x2="${METER.cx}" y2="${needleTip}"
-            class="meter-needle" stroke="currentColor" stroke-width="2" style="transform-origin: ${METER.cx}px ${METER.cy}px;" />
-      <circle cx="${METER.cx}" cy="${METER.cy}" r="4.5" class="meter-needle" fill="currentColor" />
+            stroke="#d32f2f" stroke-width="2" style="transform-origin: ${METER.cx}px ${METER.cy}px;" />
+      <circle cx="${METER.cx}" cy="${METER.cy}" r="4.5" fill="#d32f2f" />
 
-      <rect data-el="peak-light" x="196" y="152" width="8" height="8" fill="none" stroke="currentColor" stroke-width="0.9" />
-      <rect data-el="peak-light" x="208" y="152" width="8" height="8" fill="none" stroke="currentColor" stroke-width="0.9" />
-      <rect data-el="peak-light" x="220" y="152" width="8" height="8" fill="none" stroke="currentColor" stroke-width="0.9" />
+      <rect data-el="peak-light" x="196" y="152" width="8" height="8" fill="none" stroke="#1a1a1a" stroke-width="0.9" />
+      <rect data-el="peak-light" x="208" y="152" width="8" height="8" fill="none" stroke="#1a1a1a" stroke-width="0.9" />
+      <rect data-el="peak-light" x="220" y="152" width="8" height="8" fill="none" stroke="#1a1a1a" stroke-width="0.9" />
     </svg>
   `;
 }
