@@ -107,11 +107,17 @@ body {
   cursor: pointer;
 }
 
-.tab-dot {
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 50%;
-  background: #4a4a4f;
+/* Stroke, not fill, and coloured from the button — so the icon follows the
+   label into the accent on the selected tab without a second rule. */
+.tab-icon {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tab[aria-current='page'] {
@@ -119,8 +125,10 @@ body {
   font-weight: 600;
 }
 
-.tab[aria-current='page'] .tab-dot {
-  background: var(--accent);
+/* The weight bump does the work a filled variant would do on iOS: the selected
+   tab reads as selected even before you register the colour. */
+.tab[aria-current='page'] .tab-icon {
+  stroke-width: 2.4;
 }
 
 .tab[aria-current='page'] .tab-name {

@@ -140,17 +140,31 @@
 
   </main>
 
+  <!-- Feather's mic / clock / user, unmodified. Three glyphs people already
+       know: a microphone is what you speak into, a clock is the past, a person
+       is you. Nothing here is worth inventing a new symbol for. -->
   <nav class="tab-bar">
     <button class="tab" data-tab="measure" aria-current="page">
-      <span class="tab-dot"></span>
+      <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+        <line x1="12" y1="19" x2="12" y2="22.5" />
+        <line x1="8" y1="22.5" x2="16" y2="22.5" />
+      </svg>
       <span class="tab-name">Measure</span>
     </button>
     <button class="tab" data-tab="history">
-      <span class="tab-dot"></span>
+      <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
       <span class="tab-name">History</span>
     </button>
     <button class="tab" data-tab="profile">
-      <span class="tab-dot"></span>
+      <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
       <span class="tab-name">Profile</span>
     </button>
   </nav>
