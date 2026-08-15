@@ -48,6 +48,10 @@ function show(name) {
     element.hidden = key !== name;
   });
 
+  // Measure is sized to the viewport and must not scroll; History and Profile
+  // are lists and must. The stylesheet keys off this.
+  document.body.dataset.screen = name;
+
   document.querySelectorAll('[data-tab]').forEach((tab) => {
     if (tab.dataset.tab === name) tab.setAttribute('aria-current', 'page');
     else tab.removeAttribute('aria-current');

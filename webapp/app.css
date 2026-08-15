@@ -18,6 +18,11 @@
 
   --app-bar-height: 2.95rem;
   --tab-bar-height: 4.25rem;
+  /* The home-indicator strip. The tab bar pads itself by this, so every
+     height calculation has to subtract it too — leaving it out is worth about
+     34px of phantom page on a notched iPhone, which is exactly enough to make
+     a screen that should fit scroll. */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 * {
@@ -26,6 +31,8 @@
 
 body {
   margin: 0;
+  /* No rubber-banding on a screen that has nowhere to go. */
+  overscroll-behavior: none;
   background: var(--ground);
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -45,7 +52,11 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 0.7rem 1rem;
+  height: var(--app-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
   text-align: center;
   background: rgba(240, 240, 245, 0.92);
   backdrop-filter: blur(12px);
@@ -67,7 +78,7 @@ body {
 }
 
 .screens {
-  padding: 0.9rem 1rem calc(var(--tab-bar-height) + 0.5rem);
+  padding: 0.9rem 1rem calc(var(--tab-bar-height) + var(--safe-bottom) + 0.5rem);
   max-width: 30rem;
   margin: 0 auto;
 }
@@ -79,6 +90,12 @@ body {
   display: none !important;
 }
 
+/* Measure is sized to the viewport, so there is nothing below the fold to
+   reach. Belt and braces: even a few stray pixels must not turn into a scroll. */
+body[data-screen='measure'] {
+  overflow: hidden;
+}
+
 .tab-bar {
   position: fixed;
   left: 0;
@@ -86,7 +103,8 @@ body {
   bottom: 0;
   z-index: 10;
   display: flex;
-  padding-bottom: env(safe-area-inset-bottom);
+  height: calc(var(--tab-bar-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);
@@ -97,8 +115,9 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.6rem 0 0.7rem;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0;
   background: none;
   border: 0;
   font: inherit;
@@ -272,8 +291,8 @@ body {
 }
 
 .screen[data-screen='measure'] {
-  height: calc(100vh - var(--app-bar-height) - var(--tab-bar-height) - 1.9rem);
-  height: calc(100dvh - var(--app-bar-height) - var(--tab-bar-height) - 1.9rem);
+  height: calc(100vh - var(--app-bar-height) - var(--tab-bar-height) - var(--safe-bottom) - 1.9rem);
+  height: calc(100dvh - var(--app-bar-height) - var(--tab-bar-height) - var(--safe-bottom) - 1.9rem);
 }
 
 [data-el='measure-body'] {
