@@ -16,6 +16,7 @@
   --bar-track: #d6d7dd;
   --bar-fill: #4a4a4f;
 
+  --app-bar-height: 2.95rem;
   --tab-bar-height: 4.25rem;
 }
 
@@ -71,8 +72,11 @@ body {
   margin: 0 auto;
 }
 
-.screen[hidden] {
-  display: none;
+/* Views are switched by this attribute, so it has to outrank every layout rule
+   below — including `.screen[data-screen='profile'] { display: flex }`, which
+   matches at the same specificity and would otherwise win on order alone. */
+[hidden] {
+  display: none !important;
 }
 
 .tab-bar {
@@ -537,8 +541,24 @@ select.row-input {
   transition: width 0.08s linear;
 }
 
+/* The therapist CTA sits at the foot of the screen rather than trailing the
+   settings, so it reads as the way out of the app instead of one more control.
+   `margin-top: auto` puts it there when the settings are short, and it simply
+   follows them when they are not. */
+.screen[data-screen='profile'] {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - var(--app-bar-height) - var(--tab-bar-height) - 2.4rem);
+  min-height: calc(100dvh - var(--app-bar-height) - var(--tab-bar-height) - 2.4rem);
+}
+
+.profile-footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+}
+
 .disclaimer {
-  margin: 1.2rem 0.4rem 0.8rem;
+  margin: 0 0.4rem 0.8rem;
   font-size: 0.8rem;
   color: var(--ink-2);
 }
