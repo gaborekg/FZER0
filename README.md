@@ -7,6 +7,10 @@ Everything is measured inside the page. Nothing is recorded, nothing is stored
 outside your own browser, and there are no network calls anywhere in the code.
 The only permission requested is `storage`.
 
+**The web app runs here: https://gaborekg.github.io/FZER0/webapp/** — it needs a
+microphone, so it has to be served over HTTPS; that link is the easiest way onto
+a phone.
+
 Formerly called FNDMNTL — see [docs/README.md](docs/README.md).
 
 ## Layout
