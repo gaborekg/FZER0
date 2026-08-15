@@ -12,7 +12,7 @@ const LEVEL_BAR_FULL_RMS = 0.06;
 // to ask for, and nothing here is a referral or a recommendation.
 const THERAPIST_SEARCH_URL = 'https://www.google.com/maps/search/speech+therapist';
 
-const TEXT_FIELDS = ['firstName', 'lastName', 'dateOfBirth', 'sex'];
+const TEXT_FIELDS = ['firstName', 'lastName', 'yearOfBirth', 'sex'];
 const NOTE_FIELDS = ['fundamentalNote', 'rangeLowNote', 'rangeHighNote', 'targetNote'];
 
 function fillSelect(select, notes, selected) {
@@ -85,7 +85,17 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
   });
 
   clearButton.addEventListener('click', () => {
-    if (!window.confirm('Delete every saved session? This cannot be undone.')) return;
+    const count = store.listSessions().length;
+    if (count === 0) return;
+
+    // Naming the number is the difference between a reflex "OK" and a decision.
+    // The export lives one screen away and is the only copy that survives this.
+    const confirmed = window.confirm(
+      `Delete all ${count} session${count === 1 ? '' : 's'}? This cannot be undone — ` +
+        'export them from History first if you want to keep them.'
+    );
+    if (!confirmed) return;
+
     store.clearSessions();
     onProfileChanged();
   });

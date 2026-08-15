@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#f2f2f7" />
+  <meta name="theme-color" content="#f0f0f5" />
   <title>FZER0</title>
   <link rel="stylesheet" href="app.css" />
 </head>
@@ -16,47 +16,66 @@
 
     <!-- ── Measure ──────────────────────────────────────────────────── -->
     <section class="screen" data-screen="measure">
-      <div class="record-bar">
-        <button class="record-button" data-action="toggle-recording">Start measuring</button>
-        <p class="record-status" data-el="record-status" role="status">
-          Put your headphones on, then start — it listens to your microphone while
-          you talk, wherever the call is.
+
+      <!-- Shown until there is a target to measure against. Onboarding lives
+           in Profile, so Measure has to be the thing that points at it. -->
+      <div class="setup-prompt" data-el="setup-prompt" hidden>
+        <h2>Set your notes first</h2>
+        <p>
+          FZER0 needs to know the range you are aiming for before a measurement
+          means anything. It takes a minute, once.
         </p>
+        <button class="cta" data-action="go-to-profile">Open Profile</button>
       </div>
 
-      <h2 class="group-title">Volume</h2>
-      <div class="card">
-        <div class="db-meter" data-el="db-meter"></div>
-        <hr class="card-rule" />
-        <div class="stat-row">
-          <div class="stat">
-            <span class="stat-label">Last Measured</span>
-            <span class="stat-value" data-el="volume-current">—</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Average Volume</span>
-            <span class="stat-value stat-value-warm" data-el="volume-average">—</span>
+      <div data-el="measure-body">
+        <div class="record-bar">
+          <button class="record-button" data-action="toggle-recording">Start measuring</button>
+          <div class="record-meta">
+            <p class="record-status" data-el="record-status" role="status">
+              Put your headphones on, then start — it listens to your microphone
+              while you talk, wherever the call is.
+            </p>
+            <span class="elapsed" data-el="elapsed" hidden>0:00</span>
           </div>
         </div>
-      </div>
 
-      <h2 class="group-title">Frequency</h2>
-      <div class="card frequency-card">
-        <div class="stat-column">
-          <div class="stat">
-            <span class="stat-label">Current</span>
-            <span class="stat-value" data-el="pitch-current">—</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Average</span>
-            <span class="stat-value" data-el="pitch-average">—</span>
-          </div>
-          <div class="tone-play">
-            <button class="play-button" data-action="play-tone" aria-label="Play your tone">▶</button>
-            <span class="tone-caption">Your Tone</span>
+        <h2 class="group-title">Volume</h2>
+        <div class="card">
+          <div class="db-meter" data-el="db-meter" role="img" aria-label="Volume dial"></div>
+          <hr class="card-rule" />
+          <div class="stat-row">
+            <div class="stat">
+              <span class="stat-label">Live reading</span>
+              <span class="stat-value" data-el="volume-current">—</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Average Volume</span>
+              <span class="stat-value stat-value-warm" data-el="volume-average">—</span>
+            </div>
           </div>
         </div>
-        <div class="note-bars" data-el="note-bars"></div>
+
+        <h2 class="group-title">Frequency</h2>
+        <div class="card frequency-card">
+          <div class="stat-column">
+            <div class="stat">
+              <span class="stat-label">Current</span>
+              <span class="stat-value" data-el="pitch-current">—</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Most used</span>
+              <span class="stat-value" data-el="pitch-mode">—</span>
+            </div>
+            <div class="tone-play">
+              <button class="play-button" data-action="play-tone" aria-label="Play your tone">▶</button>
+              <span class="tone-caption">Your Tone</span>
+            </div>
+          </div>
+          <div class="note-bars" data-el="note-bars"></div>
+        </div>
+
+        <p class="visually-hidden" data-el="live-announcement" aria-live="polite"></p>
       </div>
     </section>
 
@@ -67,6 +86,7 @@
 
       <h2 class="group-title">Sessions</h2>
       <div data-el="session-list"></div>
+      <button class="wide-button" data-action="export-sessions">Export for your therapist (CSV)</button>
     </section>
 
     <!-- ── Profile ──────────────────────────────────────────────────── -->
@@ -81,8 +101,17 @@
           <input class="row-input" data-field="lastName" placeholder="—" />
         </label>
         <label class="row">
-          <span class="row-label">Date of Birth</span>
-          <input class="row-input" type="date" data-field="dateOfBirth" />
+          <span class="row-label">Year of Birth</span>
+          <input
+            class="row-input"
+            type="number"
+            inputmode="numeric"
+            min="1900"
+            max="2026"
+            step="1"
+            placeholder="—"
+            data-field="yearOfBirth"
+          />
         </label>
         <label class="row">
           <span class="row-label">Sex</span>
@@ -99,6 +128,10 @@
           <select class="row-input" data-field="fundamentalNote"></select>
         </label>
       </div>
+      <p class="field-note">
+        These appear at the top of the CSV you export, so a therapist knows whose
+        readings they are looking at. Nothing here leaves this device otherwise.
+      </p>
 
       <h2 class="group-title">Your range</h2>
       <div class="card rows">
@@ -145,26 +178,35 @@
        is you. Nothing here is worth inventing a new symbol for. -->
   <nav class="tab-bar">
     <button class="tab" data-tab="measure" aria-current="page">
-      <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-        <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-        <line x1="12" y1="19" x2="12" y2="22.5" />
-        <line x1="8" y1="22.5" x2="16" y2="22.5" />
-      </svg>
+      <span class="tab-icon-wrap">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <line x1="12" y1="19" x2="12" y2="22.5" />
+          <line x1="8" y1="22.5" x2="16" y2="22.5" />
+        </svg>
+        <span class="tab-badge" data-el="recording-badge" hidden>
+          <span class="visually-hidden">Recording</span>
+        </span>
+      </span>
       <span class="tab-name">Measure</span>
     </button>
     <button class="tab" data-tab="history">
-      <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="12" cy="12" r="10" />
-        <polyline points="12 6 12 12 16 14" />
-      </svg>
+      <span class="tab-icon-wrap">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      </span>
       <span class="tab-name">History</span>
     </button>
     <button class="tab" data-tab="profile">
-      <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
+      <span class="tab-icon-wrap">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </span>
       <span class="tab-name">Profile</span>
     </button>
   </nav>

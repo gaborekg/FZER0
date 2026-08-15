@@ -15,12 +15,24 @@ const screens = Object.fromEntries(
   ])
 );
 
+const recordingBadge = document.querySelector('[data-el="recording-badge"]');
+
 const history = createHistoryScreen(screens.history, { store });
 
 const measure = createMeasureScreen(screens.measure, {
   store,
   onSessionSaved: () => history.render(),
+  // An open microphone has to stay visible from every screen, not just the one
+  // that opened it.
+  onRecordingChange: (recording) => {
+    recordingBadge.hidden = !recording;
+  },
+  onNeedsSetup: () => {},
 });
+
+screens.measure
+  .querySelector('[data-action="go-to-profile"]')
+  .addEventListener('click', () => show('profile'));
 
 const profile = createProfileScreen(screens.profile, {
   store,

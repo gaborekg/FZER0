@@ -136,6 +136,36 @@ body {
   text-underline-offset: 0.2em;
 }
 
+/* Present to assistive technology, absent to everyone else. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* An open microphone must never be invisible. The badge rides the Measure tab
+   so it is on screen from every part of the app. */
+.tab-icon-wrap {
+  position: relative;
+  display: block;
+}
+
+.tab-badge {
+  position: absolute;
+  top: -1px;
+  right: -3px;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 2px var(--card);
+}
+
 /* --- Shared blocks -------------------------------------------------------- */
 
 .group-title {
@@ -245,9 +275,49 @@ body {
   background: var(--danger);
 }
 
+.record-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
 .record-status {
   margin: 0.5rem 0.2rem 0;
   font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+/* Driven by the last audio frame, not by a display timer — so a throttled tab
+   shows how long it has actually been measuring, not how long ago you started. */
+.elapsed {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--danger);
+  white-space: nowrap;
+}
+
+/* --- First run ------------------------------------------------------------ */
+
+.setup-prompt {
+  background: var(--card);
+  border-radius: 1rem;
+  padding: 1.4rem 1.1rem 1.2rem;
+  text-align: center;
+}
+
+.setup-prompt h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.setup-prompt p {
+  margin: 0 auto 1.1rem;
+  max-width: 26ch;
+  font-size: 0.88rem;
   color: var(--ink-2);
 }
 
@@ -297,7 +367,7 @@ body {
 }
 
 .tone-caption {
-  font-size: 0.62rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   color: var(--ink-2);
 }
@@ -320,15 +390,24 @@ body {
   gap: 0.3rem;
 }
 
+/* A button, as in the extension: tapping a bar plays that note. Same chart,
+   same product, same rules. */
 .bar-track {
   width: 100%;
   flex: 1;
   min-height: 6.5rem;
+  padding: 0;
+  border: 0;
   background: var(--bar-track);
   border-radius: 0.3rem;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
+  cursor: pointer;
+}
+
+.bar-track:active {
+  background: #c2c3ca;
 }
 
 .bar-fill {
@@ -354,12 +433,21 @@ body {
   box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
+/* 11px floor. Eighteen labels will not all fit at that size on a narrow
+   phone, so the sharps drop out and the naturals carry the scale — an
+   unlabelled bar is still readable by position, overlapping text is not. */
 .bar-label {
-  font-size: 0.5rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   white-space: nowrap;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
+}
+
+@media (max-width: 26rem) {
+  .bar-label[data-accidental='true'] {
+    visibility: hidden;
+  }
 }
 
 .note-bar.in-zone .bar-label {
@@ -429,6 +517,18 @@ body {
   display: block;
 }
 
+.session-chevron {
+  flex: 0 0 auto;
+  color: var(--ink-2);
+  font-size: 0.8rem;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+
+.session[aria-expanded='true'] .session-chevron {
+  transform: rotate(90deg);
+}
+
 .session-head {
   display: flex;
   align-items: baseline;
@@ -439,6 +539,12 @@ body {
 .session-date {
   font-weight: 650;
   font-size: 0.92rem;
+}
+
+.session-head-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .session-duration {
@@ -563,6 +669,13 @@ select.row-input {
 .profile-footer {
   margin-top: auto;
   padding-top: 1.5rem;
+}
+
+/* Says why the personal details are being asked for, next to the asking. */
+.field-note {
+  margin: 0.5rem 0.4rem 0;
+  font-size: 0.78rem;
+  color: var(--ink-2);
 }
 
 .disclaimer {

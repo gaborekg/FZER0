@@ -14,7 +14,7 @@ export const MAX_SESSIONS = 200;
 export const EMPTY_PROFILE = {
   firstName: '',
   lastName: '',
-  dateOfBirth: '',
+  yearOfBirth: '',
   sex: '',
   fundamentalNote: '',
   rangeLowNote: '',
