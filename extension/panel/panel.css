@@ -1,0 +1,485 @@
+:host {
+  all: initial;
+}
+
+/* The three views (face, mini, details) share one positioned wrapper, so
+   dragging moves all of them and switching view never jumps the panel. */
+.panel {
+  position: fixed;
+  top: 4rem;
+  right: 1rem;
+  z-index: 2147483647;
+  font-family: system-ui, sans-serif;
+  cursor: grab;
+  /* Without this, a touch/pen drag scrolls the Meet page underneath. */
+  touch-action: none;
+  /* Never wider or taller than the window it floats over — a Meet call in a
+     half-screen window is the normal case, not the edge case. */
+  max-width: calc(100vw - 1.5rem);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+}
+
+.panel * {
+  box-sizing: border-box;
+}
+
+/* The browser's own [hidden] rule is `display: none` at UA specificity, which
+   any class rule beats — so `.mini { display: flex }` kept the minimized strip
+   on screen underneath the full view. Views are switched by this attribute, so
+   it has to outrank every layout rule in this file. */
+[hidden] {
+  display: none !important;
+}
+
+.panel.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* Everything inside the face sizes against the FACE's width, not the
+   window's — via container queries and cqi units. That way the layout is
+   right whether the panel shrank because the window is narrow or because
+   someone set a smaller width here. */
+.face {
+  width: 26rem;
+  max-width: 100%;
+  container-type: inline-size;
+  container-name: face;
+  padding: 0.75rem;
+  background: #f6f5fa;
+  color: #2b2b2b;
+  font-size: 0.85rem;
+  border-radius: 0.9rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Minimized is a ribbon, not a smaller card: the same two groups laid end to
+   end, carrying only the live figures. Everything that answers "how has the
+   call gone" — the bars, the target, the in-zone share — belongs to the full
+   view and is dropped here. */
+.mini {
+  display: flex;
+  align-items: stretch;
+  gap: 0.7rem;
+  padding: 0.5rem 0.6rem;
+  max-width: 100%;
+  /* No container-type here, deliberately. `.panel` is position:fixed with no
+     width, so it shrink-to-fits around whichever view is showing. Inline-size
+     containment makes an element size itself WITHOUT looking at its contents,
+     so a contained `.mini` contributes nothing to that fit and the ribbon
+     collapses to a sliver. `.face` can be a container because it states an
+     explicit width; this one cannot. */
+  background: #f6f5fa;
+  color: #2b2b2b;
+  font-size: 0.85rem;
+  border-radius: 0.9rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* Both groups take the height of the taller one, so their boxes match across
+   the two cards the same way they do in the full view. */
+.mini-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mini-group .card {
+  flex: 1;
+}
+
+.mini-group h2 {
+  margin: 0 0 0 0.15rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.mini-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+  padding: 0.4rem;
+}
+
+/* Sized by their contents here — the fixed box width belongs to the full
+   view, where the two columns have to share an edge. */
+.mini .stat {
+  width: auto;
+  min-height: 2.8rem;
+  padding: 0.3rem 0.45rem 0.35rem;
+  gap: 0.2rem;
+}
+
+.mini .stat-value {
+  font-size: 1rem;
+}
+
+/* A fixed basis, not `flex: 1`. The dial's viewBox gives it an intrinsic
+   240x172, and in the ribbon — which has no declared width and shrink-to-fits
+   around its contents — a growable meter reports that intrinsic width as what
+   it wants, dragging the whole strip up to full size. */
+.mini .db-meter {
+  flex: 0 0 5rem;
+  min-width: 0;
+}
+
+/* `.icon-button` uses `all: unset`, which resets align-self back to stretch,
+   and it is declared later in this file — so this needs the extra class to
+   win rather than relying on order. */
+.mini .mini-expand {
+  align-self: center;
+  height: 1.4rem;
+}
+
+.details canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+.head-buttons {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.group + .group {
+  margin-top: 0.75rem;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 0.4rem 0.15rem;
+}
+
+.group-head h2 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.6rem;
+}
+
+/* --- Volume card: two stat boxes, then the dial ------------------------- */
+
+/* Both cards are built the same way: a column of stat boxes on the left, the
+   visualisation stretching to fill whatever is left. That is what lines the
+   Volume card's two boxes up with the Frequency card's three. */
+.volume-card,
+.frequency-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+/* A grid, not a flex column, for one reason: `grid-auto-rows: 1fr` forces
+   every box to the height of the tallest. Sized to content, a box holding one
+   big number is shorter than one holding two small rows, and the column reads
+   as a ragged stack. Both cards' tallest box is the same two-row Average, so
+   equalising within each column also equalises across them. */
+.stat-column {
+  display: grid;
+  grid-auto-rows: 1fr;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+}
+
+/* One size for every box in both cards — a fixed width so the two columns
+   share an edge, and a floor on the height so a box holding one big number
+   matches one holding two small rows. */
+.stat {
+  width: clamp(4.2rem, 22cqi, 5.6rem);
+  min-height: 3.6rem;
+  background: #eeedf1;
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.5rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.stat-label {
+  font-size: clamp(0.55rem, 2.4cqi, 0.6rem);
+  font-weight: 700;
+}
+
+/* Scales smoothly with the panel instead of jumping at a breakpoint: 1cqi is
+   1% of the face's width, so 5.2cqi lands on 1.35rem at the full 26rem. */
+.stat-value {
+  font-size: clamp(0.95rem, 5.2cqi, 1.35rem);
+  font-weight: 400;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The Average box carries two figures. Keeping them in one box rather than
+   two keeps Current as the single large number your eye lands on. */
+.stat-rows {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 0.1rem 0.4rem;
+}
+
+.row-label {
+  font-size: clamp(0.5rem, 2.2cqi, 0.58rem);
+  color: #6d6b74;
+}
+
+.row-value {
+  font-size: clamp(0.75rem, 3.4cqi, 0.95rem);
+  font-weight: 600;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  justify-self: end;
+}
+
+/* Stretches to fill the card beside the stat column, so the dial is as tall
+   as the boxes it sits next to instead of setting its own height. */
+.db-meter {
+  flex: 1;
+  min-width: 7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.db-meter-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.db-meter-svg line[data-el="needle"] {
+  transition: transform 0.15s linear;
+}
+
+/* --- Frequency card: one bar per note ----------------------------------- */
+
+.note-bars {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 1px;
+}
+
+.note-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.bar-track {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  width: 100%;
+  /* Grows to whatever height the Current/Average/In-zone column needs, so
+     the two halves of the card always line up. */
+  flex: 1;
+  min-height: 3rem;
+  background: #d8d7dd;
+  border-radius: 0.35rem;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+/* Reads in the same green as the zone it refers to, so the number and the
+   tinted bars are visibly the same thing. No threshold colouring: the panel
+   reports where the voice went, it does not grade it. */
+.stat-zone,
+.stat-target {
+  background: #e2efe7;
+}
+
+.stat-zone .stat-label,
+.stat-zone .stat-value,
+.stat-target .stat-label,
+.stat-target .stat-value {
+  color: #2b6b4a;
+}
+
+/* Now that every box is the height of the tallest, spreading label and value
+   to opposite ends would leave a hole in the short ones. Sit them together at
+   the top; the extra height is padding, not a gap. */
+.stat {
+  justify-content: flex-start;
+}
+
+/* --- Target zone -------------------------------------------------------- */
+
+/* The chart covers the whole band, so the notes you are actually aiming for
+   need to stand out from the ones that are merely audible. The zone is drawn
+   into the empty part of the track, behind the bar — tinting the bar itself
+   would collide with reading its height. */
+.note-bar.in-zone .bar-track {
+  background: #cfe3d6;
+}
+
+.note-bar.in-zone .bar-label {
+  color: #2b6b4a;
+}
+
+.note-bar.is-target .bar-track {
+  box-shadow: inset 0 0 0 1.5px #2b6b4a;
+}
+
+.note-bar.is-target .bar-label {
+  color: #1c4a33;
+  text-decoration: underline;
+  /* The target is a single bar among 22 — it has to survive the label hiding
+     that kicks in on a narrow panel. */
+  visibility: visible !important;
+  display: block !important;
+}
+
+/* Each bar doubles as the play button for its note, so it needs to look
+   pressable — otherwise "play the tone whether or not I'm talking" is a
+   feature with no visible way in. */
+.bar-track:hover {
+  background: #c4c3ca;
+  box-shadow: inset 0 0 0 1.5px #8b8a92;
+}
+
+.bar-track:active .bar-fill,
+.bar-track:hover .bar-fill {
+  background: #1f6feb;
+}
+
+.bar-fill {
+  display: block;
+  width: 100%;
+  height: 0;
+  background: #454242;
+  border-radius: 0.35rem;
+  /* Shorter than the 250 ms readout tick, so a bar settles between updates
+     instead of living permanently mid-animation. */
+  transition: height 0.15s linear;
+}
+
+/* The band is 18 semitones wide, so a bar is ~14px — far too narrow for
+   "F#2" lying flat. Turned on its side, each label needs only its height. */
+.bar-label {
+  font-size: 0.5rem;
+  font-weight: 700;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* --- Narrow panel ------------------------------------------------------- */
+
+/* Below ~340px the dial and the two stat boxes can no longer share a row
+   without squeezing both into uselessness, so they stack. Same for the
+   frequency card: the Current/Average pair moves above the bars. */
+@container face (max-width: 340px) {
+  .volume-card,
+  .frequency-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* The column turns into a row. It is a grid, so that's a flow change —
+     equal columns now instead of equal rows. */
+  .stat-column {
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+
+  /* The fixed box width from the wide layout would overflow a narrow row. */
+  .stat {
+    width: auto;
+  }
+
+  .db-meter {
+    min-width: 0;
+    align-self: center;
+    width: 100%;
+    max-width: 15rem;
+  }
+
+  /* Stacked, the bars no longer borrow their height from the stat column. */
+  .note-bars {
+    min-height: 5.5rem;
+  }
+}
+
+/* 22 labels need ~150px of width between them. Under that, the sharps drop
+   out and the naturals carry the scale — an unlabelled bar is still readable
+   by position, an unreadable smear of overlapping text is not. */
+@container face (max-width: 300px) {
+  .bar-label[data-accidental='true'] {
+    visibility: hidden;
+  }
+}
+
+@container face (max-width: 200px) {
+  .bar-label {
+    display: none;
+  }
+}
+
+/* --- Details view ------------------------------------------------------- */
+
+.details {
+  width: 12rem;
+  max-width: 100%;
+  padding: 0.75rem;
+  background: #202124;
+  color: #e8eaed;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.icon-button {
+  all: unset;
+  cursor: pointer;
+  background: #ffffff;
+  border: 1px solid #d3d2d8;
+  border-radius: 0.35rem;
+  padding: 0 0.45rem;
+  line-height: 1.2rem;
+  text-align: center;
+  min-width: 1rem;
+}
+
+.icon-button:hover {
+  background: #e6e5eb;
+}
+
+.details button {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.4rem;
+  font-size: 0.8rem;
+}
+
+dl {
+  margin: 0;
+}
+
+dt {
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+dd {
+  margin: 0;
+}

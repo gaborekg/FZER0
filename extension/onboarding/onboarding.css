@@ -1,0 +1,176 @@
+/* Same palette as the in-call panel: lavender-grey ground, white cards,
+   the target green, and the dial's red. Kept as tokens so the two surfaces
+   can't drift apart. */
+:root {
+  --ground: #f6f5fa;
+  --card: #ffffff;
+  --field: #eeedf1;
+  --ink: #2b2b2b;
+  --ink-soft: #6d6b74;
+  --line: #d3d2d8;
+  --green: #2b6b4a;
+  --green-soft: #e2efe7;
+  --red: #d32f2f;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: var(--ground);
+  color: var(--ink);
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+  line-height: 1.55;
+}
+
+section {
+  background: var(--card);
+  border-radius: 0.9rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+section[hidden] {
+  display: none;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h1:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+}
+
+p {
+  margin: 0 0 0.75rem;
+  color: var(--ink-soft);
+}
+
+ul {
+  margin: 0 0 0.75rem;
+  padding-left: 1.2rem;
+  color: var(--ink-soft);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: var(--field);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
+  color: var(--ink);
+}
+
+button {
+  display: block;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.7rem;
+  font: inherit;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--green);
+  border: 1px solid var(--green);
+  border-radius: 0.6rem;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: #235b3e;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* The second choice on a screen is never the one we're steering towards. */
+button.secondary,
+[data-action="decline-mic"],
+[data-action="know-tone-no"] {
+  background: var(--field);
+  color: var(--ink);
+  border-color: var(--line);
+  font-weight: 500;
+}
+
+button.secondary:hover:not(:disabled),
+[data-action="decline-mic"]:hover:not(:disabled),
+[data-action="know-tone-no"]:hover:not(:disabled) {
+  background: #e3e2e8;
+}
+
+label {
+  display: block;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+select {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.55rem 0.5rem;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 0.6rem;
+}
+
+[data-error] {
+  margin: 0.9rem 0 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.5rem;
+  background: #fdeaea;
+  color: var(--red);
+  font-size: 0.85rem;
+}
+
+/* --- Calibration ---------------------------------------------------------
+   A live level bar, so five seconds of silence looks different from five
+   seconds of a microphone that isn't working. */
+
+.level {
+  height: 0.6rem;
+  margin: 1.1rem 0 0.7rem;
+  background: var(--field);
+  border-radius: 0.3rem;
+  overflow: hidden;
+}
+
+.level span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--green);
+  border-radius: 0.3rem;
+  transition: width 0.08s linear;
+}
+
+.status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--green);
+  font-weight: 600;
+  min-height: 1.3rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level span {
+    transition: none;
+  }
+}

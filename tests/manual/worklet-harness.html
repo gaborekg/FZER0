@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>f0-processor manual test</title></head>
+<body>
+<p>Open the console. You should see repeated postMessage logs with hz close to 110.</p>
+<script type="module">
+  const audioContext = new AudioContext();
+  await audioContext.audioWorklet.addModule('../../extension/worklet/f0-processor.js');
+
+  const oscillator = audioContext.createOscillator();
+  oscillator.frequency.value = 110;
+
+  const workletNode = new AudioWorkletNode(audioContext, 'fzer0-f0-processor');
+  workletNode.port.onmessage = (event) => {
+    console.log('f0-processor result:', event.data);
+  };
+
+  oscillator.connect(workletNode);
+  oscillator.start();
+</script>
+</body>
+</html>

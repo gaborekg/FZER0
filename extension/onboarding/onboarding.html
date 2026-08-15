@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FZER0 setup</title>
+  <link rel="stylesheet" href="onboarding.css" />
+</head>
+<body>
+  <main>
+    <section data-screen="disclaimer">
+      <h1 tabindex="-1">FZER0</h1>
+      <p>
+        This plugin needs you to accept the use of the microphone.
+        We are not recording or keeping any information about you or
+        your conversations.
+      </p>
+      <button data-action="accept-mic">Accept the rights to access the microphone</button>
+      <button data-action="decline-mic">Decline the rights to access the microphone</button>
+    </section>
+
+    <section data-screen="declined" hidden>
+      <h1 tabindex="-1">FZER0 can't run without the microphone</h1>
+      <p>
+        This extension has no purpose without microphone access. To remove
+        it, go to <code>chrome://extensions</code>, find FZER0, and click
+        Remove.
+      </p>
+    </section>
+
+    <section data-screen="instructions" hidden>
+      <h1 tabindex="-1">Before you join a call</h1>
+      <ul>
+        <li>Headset mandatory</li>
+        <li>Measures volume</li>
+      </ul>
+      <p>Do you know your fundamental tone?</p>
+      <button data-action="know-tone-yes">Yes</button>
+      <button data-action="know-tone-no">No</button>
+    </section>
+
+    <section data-screen="no-tone" hidden>
+      <h1 tabindex="-1">Find your fundamental tone first</h1>
+      <p>
+        This is not a medical device. If you have doubts, go to your speech
+        pathologist to find out your fundamental tone to start using
+        FZER0.
+      </p>
+    </section>
+
+    <section data-screen="setup" hidden>
+      <h1 tabindex="-1">Set your range and target</h1>
+      <form data-form="setup">
+        <label>
+          Lowest note in your range
+          <select data-field="rangeLowNote" required></select>
+        </label>
+        <label>
+          Highest note in your range
+          <select data-field="rangeHighNote" required></select>
+        </label>
+        <label>
+          Your target note
+          <select data-field="targetNote" required></select>
+        </label>
+        <button type="submit">Save and finish setup</button>
+      </form>
+    </section>
+
+    <section data-screen="calibration" hidden>
+      <h1 tabindex="-1">Set your speaking level</h1>
+      <p>
+        Talk normally for five seconds — anything, out loud, at the volume
+        you'd use on a call.
+      </p>
+      <p>
+        This sets the Target mark on the dial, and makes the reference tone
+        play at your own speaking volume so you never push your voice to
+        match it. You only do this once.
+      </p>
+      <div class="level" aria-hidden="true"><span data-el="level-fill"></span></div>
+      <p class="status" data-el="calibration-status" role="status">
+        Chrome will ask for the microphone.
+      </p>
+      <button data-action="start-calibration">Start listening</button>
+      <button class="secondary" data-action="skip-calibration">
+        Skip — I'll set it during a call
+      </button>
+    </section>
+
+    <section data-screen="done" hidden>
+      <h1 tabindex="-1">You're set up</h1>
+      <p>
+        Join any Google Meet call — the panel will appear on its own. Meet
+        will ask for the microphone once, on its own page.
+      </p>
+      <p>
+        Anything here can be changed later from the <code>⋯</code> button on
+        the panel, including your speaking level.
+      </p>
+    </section>
+  </main>
+  <script type="module" src="onboarding.js"></script>
+</body>
+</html>

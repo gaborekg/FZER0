@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head><title>Mock Meet</title></head>
+<body style="background:#202124; color:white; font-family: sans-serif; height:100vh; margin:0; display:flex; align-items:center; justify-content:center;">
+  <p>Offline stand-in for a Meet call layout.</p>
+  <script type="module">
+    import { mountPanel } from '../extension/panel/panel.js';
+
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const { renderReading } = mountPanel(host, {
+      rangeLowNote: 'G2',
+      rangeHighNote: 'D3',
+      targetNote: 'A2',
+      referenceToneNote: 'A2',
+    });
+
+    // Real speech has pauses with much lower volume than the voiced parts —
+    // that contrast is what the noise-floor logic uses to tell "voice" from
+    // "silence". A constant volume here would make it classify everything
+    // as too-quiet, so one in every 8 ticks simulates a brief pause.
+    //
+    // The pitch is a mean-reverting random walk around A2 (110 Hz), NOT a
+    // uniform sweep: a sweep visits every note equally often, which would
+    // draw a flat row of identical bars and make a working histogram
+    // indistinguishable from a broken one. A walk produces a hump.
+    const CENTRE_HZ = 110;
+    let hz = CENTRE_HZ;
+    let tick = 0;
+    setInterval(() => {
+      tick += 1;
+      hz += (CENTRE_HZ - hz) * 0.12 + (Math.random() - 0.5) * 14;
+      hz = Math.max(82, Math.min(220, hz));
+      const isPause = tick % 8 === 0;
+      renderReading({
+        hz,
+        confidence: isPause ? 0 : 0.9,
+        // Vary the loudness a little too, so Current and Average dB differ.
+        rms: isPause ? 0.0005 : 0.02 + Math.random() * 0.02,
+      });
+      // ~20 frames/sec, matching the real worklet's rate — the panel's
+      // throttling and the noise-floor window both depend on that rate.
+    }, 50);
+  </script>
+</body>
+</html>
