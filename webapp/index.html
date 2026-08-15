@@ -29,17 +29,6 @@
       </div>
 
       <div data-el="measure-body">
-        <div class="record-bar">
-          <button class="record-button" data-action="toggle-recording">Start measuring</button>
-          <div class="record-meta">
-            <p class="record-status" data-el="record-status" role="status">
-              Put your headphones on, then start — it listens to your microphone
-              while you talk, wherever the call is.
-            </p>
-            <span class="elapsed" data-el="elapsed" hidden>0:00</span>
-          </div>
-        </div>
-
         <h2 class="group-title">Volume</h2>
         <div class="card">
           <div class="db-meter" data-el="db-meter" role="img" aria-label="Volume dial"></div>
@@ -76,6 +65,20 @@
         </div>
 
         <p class="visually-hidden" data-el="live-announcement" aria-live="polite"></p>
+
+        <!-- Last in the flow, pinned above the tab bar. Stop has to stay in
+             reach without scrolling — it is the only thing standing between a
+             finished call and a saved session. -->
+        <div class="record-bar">
+          <p class="record-status" data-el="record-status" role="status">
+            Put your headphones on, then start — it listens to your microphone
+            while you talk, wherever the call is.
+          </p>
+          <div class="record-actions">
+            <button class="record-button" data-action="toggle-recording">Start measuring</button>
+            <span class="elapsed" data-el="elapsed" hidden>0:00</span>
+          </div>
+        </div>
       </div>
     </section>
 

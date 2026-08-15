@@ -254,13 +254,29 @@ body {
 
 /* --- Measure -------------------------------------------------------------- */
 
+/* Sticky rather than simply last: the content is taller than a phone screen,
+   and a Stop button you have to scroll to find is a Stop button that gets
+   pressed late. It sits in the flow and pins itself above the tab bar. */
 .record-bar {
-  margin-bottom: 1rem;
+  position: sticky;
+  bottom: calc(var(--tab-bar-height) + 0.5rem);
+  z-index: 5;
+  margin: 1.25rem -0.35rem 0;
+  padding: 0.55rem 0.35rem 0.35rem;
+  background: rgba(240, 240, 245, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+}
+
+.record-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
 }
 
 .record-button {
   display: block;
-  width: 100%;
+  flex: 1;
   padding: 0.85rem;
   font: inherit;
   font-weight: 650;
@@ -275,24 +291,17 @@ body {
   background: var(--danger);
 }
 
-.record-meta {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.8rem;
-}
-
 .record-status {
-  margin: 0.5rem 0.2rem 0;
-  font-size: 0.8rem;
+  margin: 0 0.25rem 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
   color: var(--ink-2);
 }
 
 /* Driven by the last audio frame, not by a display timer — so a throttled tab
    shows how long it has actually been measuring, not how long ago you started. */
 .elapsed {
-  margin-top: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--danger);
