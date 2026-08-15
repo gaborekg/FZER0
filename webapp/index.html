@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f2f2f7" />
+  <title>FZER0</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <header class="app-bar">
+    <h1 data-el="screen-title">FZER0</h1>
+  </header>
+
+  <main class="screens">
+
+    <!-- ── Measure ──────────────────────────────────────────────────── -->
+    <section class="screen" data-screen="measure">
+      <div class="record-bar">
+        <button class="record-button" data-action="toggle-recording">Start measuring</button>
+        <p class="record-status" data-el="record-status" role="status">
+          Put your headphones on, then start — it listens to your microphone while
+          you talk, wherever the call is.
+        </p>
+      </div>
+
+      <h2 class="group-title">Volume</h2>
+      <div class="card">
+        <div class="db-meter" data-el="db-meter"></div>
+        <hr class="card-rule" />
+        <div class="stat-row">
+          <div class="stat">
+            <span class="stat-label">Last Measured</span>
+            <span class="stat-value" data-el="volume-current">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Average Volume</span>
+            <span class="stat-value stat-value-warm" data-el="volume-average">—</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="group-title">Frequency</h2>
+      <div class="card frequency-card">
+        <div class="stat-column">
+          <div class="stat">
+            <span class="stat-label">Current</span>
+            <span class="stat-value" data-el="pitch-current">—</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Average</span>
+            <span class="stat-value" data-el="pitch-average">—</span>
+          </div>
+          <div class="tone-play">
+            <button class="play-button" data-action="play-tone" aria-label="Play your tone">▶</button>
+            <span class="tone-caption">Your Tone</span>
+          </div>
+        </div>
+        <div class="note-bars" data-el="note-bars"></div>
+      </div>
+    </section>
+
+    <!-- ── History ──────────────────────────────────────────────────── -->
+    <section class="screen" data-screen="history" hidden>
+      <h2 class="group-title">Progress</h2>
+      <div class="card" data-el="trend-card"></div>
+
+      <h2 class="group-title">Sessions</h2>
+      <div data-el="session-list"></div>
+    </section>
+
+    <!-- ── Profile ──────────────────────────────────────────────────── -->
+    <section class="screen" data-screen="profile" hidden>
+      <div class="card rows">
+        <label class="row">
+          <span class="row-label">First Name</span>
+          <input class="row-input" data-field="firstName" placeholder="—" />
+        </label>
+        <label class="row">
+          <span class="row-label">Last Name</span>
+          <input class="row-input" data-field="lastName" placeholder="—" />
+        </label>
+        <label class="row">
+          <span class="row-label">Date of Birth</span>
+          <input class="row-input" type="date" data-field="dateOfBirth" />
+        </label>
+        <label class="row">
+          <span class="row-label">Sex</span>
+          <select class="row-input" data-field="sex">
+            <option value="">—</option>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Intersex</option>
+            <option>Prefer not to say</option>
+          </select>
+        </label>
+        <label class="row">
+          <span class="row-label">Fundamental tone</span>
+          <select class="row-input" data-field="fundamentalNote"></select>
+        </label>
+      </div>
+
+      <h2 class="group-title">Your range</h2>
+      <div class="card rows">
+        <label class="row">
+          <span class="row-label">Lowest note</span>
+          <select class="row-input" data-field="rangeLowNote"></select>
+        </label>
+        <label class="row">
+          <span class="row-label">Highest note</span>
+          <select class="row-input" data-field="rangeHighNote"></select>
+        </label>
+        <label class="row">
+          <span class="row-label">Target note</span>
+          <select class="row-input" data-field="targetNote"></select>
+        </label>
+      </div>
+
+      <h2 class="group-title">Speaking level</h2>
+      <div class="card">
+        <p class="card-body">
+          Talk normally for five seconds. This sets the target on the dial and how
+          loud your tone plays, so you never push your voice to match it.
+        </p>
+        <div class="level" aria-hidden="true"><span data-el="level-fill"></span></div>
+        <p class="card-status" data-el="calibration-status" role="status"></p>
+        <button class="wide-button" data-action="start-calibration">Start listening</button>
+      </div>
+
+      <p class="disclaimer">
+        This app does not replace a speech therapist. If you need to find one in
+        your area, search here.
+      </p>
+      <button class="cta" data-action="find-therapist">Find a speech therapist</button>
+
+      <button class="wide-button danger" data-action="clear-sessions">Delete all sessions</button>
+    </section>
+
+  </main>
+
+  <nav class="tab-bar">
+    <button class="tab" data-tab="measure" aria-current="page">
+      <span class="tab-dot"></span>
+      <span class="tab-name">Measure</span>
+    </button>
+    <button class="tab" data-tab="history">
+      <span class="tab-dot"></span>
+      <span class="tab-name">History</span>
+    </button>
+    <button class="tab" data-tab="profile">
+      <span class="tab-dot"></span>
+      <span class="tab-name">Profile</span>
+    </button>
+  </nav>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
