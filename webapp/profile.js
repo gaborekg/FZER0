@@ -112,9 +112,20 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
       return;
     }
     // Straight from the slider, so you hear the change before it is saved.
-    tonePlayer.play(note, {
-      gain: toneGainFor({ ...profile, toneVolume: Number(inputs.toneVolume.value) }),
-    });
+    const gain = toneGainFor({ ...profile, toneVolume: Number(inputs.toneVolume.value) });
+    tonePlayer.play(note, { gain });
+
+    // Says what it actually did. "No sound" has three different causes —
+    // blocked audio, a gain near zero, and the phone's silent switch — and
+    // they are indistinguishable from the outside without this.
+    statusEl.textContent = `Playing ${note} at ${Math.round(gain * 100)}%…`;
+    setTimeout(() => {
+      const state = tonePlayer.state();
+      statusEl.textContent =
+        state === 'running'
+          ? `Played ${note} at ${Math.round(gain * 100)}%. If you heard nothing, check the silent switch on the side of the phone.`
+          : `The browser is blocking audio on this page (${state}).`;
+    }, 500);
   });
 
   root.querySelector('[data-action="find-therapist"]').addEventListener('click', () => {
