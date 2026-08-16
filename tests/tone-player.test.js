@@ -2,21 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTonePlayer } from '../src/tone-player.js';
 
-// The player hands a Blob to URL.createObjectURL, which Node does not have on
-// the global by default in every version — and the test wants to see the bytes
-// anyway, so it keeps them.
-const blobs = [];
-globalThis.URL.createObjectURL = (blob) => {
-  blobs.push(blob);
-  return `blob:tone-${blobs.length}`;
-};
-globalThis.Blob ??= class {
-  constructor(parts, options) {
-    this.parts = parts;
-    this.type = options?.type;
-  }
-};
-
 function fakeAudio() {
   const elements = [];
   const factory = (src) => {
@@ -48,15 +33,15 @@ function fakeAudio() {
   return { factory, elements };
 }
 
-test('playing a note starts a WAV of that note', async () => {
+test('playing a note starts a WAV of that note, as a data URL', async () => {
+  // A blob: URL is what WKWebView refuses, so the source has to be a data URL.
   const { factory, elements } = fakeAudio();
-  blobs.length = 0;
 
   await createTonePlayer(factory).play('A2');
 
   assert.equal(elements.length, 1);
   assert.equal(elements[0].played, 1);
-  assert.equal(blobs.at(-1).type, 'audio/wav');
+  assert.match(elements[0].src, /^data:audio\/wav;base64,/);
 });
 
 test('it plays inline, so iOS does not take over the screen', async () => {
@@ -65,17 +50,19 @@ test('it plays inline, so iOS does not take over the screen', async () => {
   assert.equal(elements[0].attributes.playsinline, '');
 });
 
-test('the same note at the same volume is only encoded once', async () => {
-  const { factory } = fakeAudio();
+test('the same note at the same volume reuses the same encoded audio', async () => {
+  const { factory, elements } = fakeAudio();
   const player = createTonePlayer(factory);
-  blobs.length = 0;
 
   await player.play('A2');
   await player.play('A2');
-  assert.equal(blobs.length, 1, 'reused');
+  assert.equal(elements[1].src, elements[0].src, 'reused');
 
   await player.play('A2', { gain: 0.9 });
-  assert.equal(blobs.length, 2, 'a different volume is a different file');
+  assert.notEqual(elements[2].src, elements[0].src, 'a different volume is a different file');
+
+  await player.play('C3');
+  assert.notEqual(elements[3].src, elements[0].src, 'and so is a different note');
 });
 
 test('a second tone replaces the first rather than layering over it', async () => {
