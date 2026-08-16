@@ -2,7 +2,7 @@ import { volumeLevel, volumeVerdict } from '../../src/gauge.js';
 import { noteToHz, notesInRange, hzToNote, isValidRange, RANGE_BAND_NOTES } from '../../src/note-hz.js';
 import { createNoiseFloor } from '../../src/noise-floor.js';
 import { classifyFrame } from '../../src/gate.js';
-import { createSession } from '../../src/session.js';
+import { createSessionRecorder } from '../../src/session-recorder.js';
 import { createTonePlayer } from '../../src/tone-player.js';
 import {
   createRunningMean,
@@ -14,6 +14,7 @@ import {
 import { dbFromLevel, buildDbMeterSvg } from '../../src/db-meter.js';
 import { computeCeilingFromSamples, computeTypicalFromSamples } from '../../src/volume-calibration.js';
 import { createPrefsStore } from '../../src/prefs.js';
+import { exportSettings } from '../../src/settings-transfer.js';
 import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS } from '../../src/config.js';
 
 const PANEL_HTML = `
@@ -81,13 +82,13 @@ const PANEL_HTML = `
             <span class="stat-value" data-el="volume-target">—</span>
           </div>
         </div>
-        <div class="db-meter" data-el="db-meter"></div>
+        <div class="db-meter" data-el="db-meter" role="img" aria-label="Volume dial"></div>
       </div>
     </section>
 
     <section class="group">
       <div class="group-head">
-        <h2>Frequency</h2>
+        <h2>Frequency <span class="range-note" data-el="range-note"></span></h2>
       </div>
       <div class="card frequency-card">
         <div class="stat-column">
@@ -112,37 +113,58 @@ const PANEL_HTML = `
         <div class="note-bars" data-el="note-bars"></div>
       </div>
     </section>
+    <p class="visually-hidden" data-el="live-announcement" aria-live="polite"></p>
   </div>
 
   <div class="details" data-view="details" hidden>
-    <button data-action="close-details">← Back</button>
-    <dl>
-      <dt>Live reading</dt>
-      <dd data-el="live-hz">—</dd>
-      <dt>Voiced</dt>
-      <dd data-el="count-voiced">0</dd>
-      <dt>Too quiet</dt>
-      <dd data-el="count-too-quiet">0</dd>
-      <dt>No pitch</dt>
-      <dd data-el="count-no-pitch">0</dd>
-      <dt>Out of range</dt>
-      <dd data-el="count-out-of-range">0</dd>
-    </dl>
-    <canvas data-el="history-chart" width="180" height="60"></canvas>
-    <label>
-      Low
-      <select data-field="rangeLowNote"></select>
-    </label>
-    <label>
-      High
-      <select data-field="rangeHighNote"></select>
-    </label>
-    <label>
-      Target
-      <select data-field="targetNote"></select>
-    </label>
-    <button data-action="save-range">Save range/target</button>
-    <button data-action="calibrate-volume">Talk normally, then set it</button>
+    <div class="group-head">
+      <h2 tabindex="-1" data-el="details-heading">Settings</h2>
+      <button class="icon-button" data-action="close-details" aria-label="Back">←</button>
+    </div>
+
+    <div class="card">
+      <h3 class="sub-title">This call</h3>
+      <dl class="summary">
+        <dt>Talking</dt><dd data-el="sum-talking">—</dd>
+        <dt>Average pitch</dt><dd data-el="sum-pitch">—</dd>
+        <dt>In range</dt><dd data-el="sum-zone">—</dd>
+        <dt>Average volume</dt><dd data-el="sum-volume">—</dd>
+      </dl>
+      <p class="hint" data-el="sum-note">Saved when you leave the call.</p>
+    </div>
+
+    <div class="card">
+      <h3 class="sub-title">Your range</h3>
+      <label class="field">
+        <span>Lowest note</span>
+        <select data-field="rangeLowNote"></select>
+      </label>
+      <label class="field">
+        <span>Highest note</span>
+        <select data-field="rangeHighNote"></select>
+      </label>
+      <label class="field">
+        <span>Target note</span>
+        <select data-field="targetNote"></select>
+      </label>
+      <button class="wide-button" data-action="save-range">Save</button>
+    </div>
+
+    <div class="card">
+      <h3 class="sub-title">Speaking level</h3>
+      <p class="hint">Talk normally for five seconds. Sets your target and how loud your tone plays.</p>
+      <div class="level" aria-hidden="true"><span data-el="level-fill"></span></div>
+      <button class="wide-button" data-action="calibrate-volume">Talk normally, then set it</button>
+    </div>
+
+    <div class="card">
+      <h3 class="sub-title">Move your setup</h3>
+      <p class="hint">
+        The extension and the web app keep separate storage, so your notes and
+        calibration do not travel on their own.
+      </p>
+      <button class="wide-button" data-action="export-settings">Download settings file</button>
+    </div>
   </div>
   </div>
 `;
@@ -161,6 +183,20 @@ const NOTE_DECAY_HALF_LIFE_MS = 10_000;
 
 // "The last minute" for the recent averages, alongside the call-long ones.
 const RECENT_WINDOW_MS = 60_000;
+
+// Full width on the calibration level bar at a comfortably loud voice.
+// Feedback only — nothing measured depends on it.
+const LEVEL_BAR_FULL_RMS = 0.06;
+
+// How far the panel moves per arrow-key press.
+const NUDGE_PX = 16;
+
+function formatDuration(ms) {
+  const minutes = Math.round(ms / 60000);
+  if (minutes < 1) return 'under a minute';
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
+}
 
 // A default reference-tone loudness, personalized once the user calibrates
 // via "Talk normally, then set it" — browsers can't read the system/
@@ -196,7 +232,7 @@ export function mountPanel(hostElement, setup) {
   let rangeHighHz = noteToHz(setup.rangeHighNote);
 
   const noiseFloor = createNoiseFloor();
-  const session = createSession();
+  let recorder = createSessionRecorder(RANGE_BAND_NOTES);
   const tonePlayer = createTonePlayer();
 
   let analysisPaused = false;
@@ -222,13 +258,6 @@ export function mountPanel(hostElement, setup) {
   const pitchAverageMinuteEls = all('pitch-average-minute');
   const pitchAverageCallEls = all('pitch-average-call');
   const zoneShareEls = all('zone-share');
-  const liveHzEl = shadow.querySelector('[data-el="live-hz"]');
-  const countEls = {
-    voiced: shadow.querySelector('[data-el="count-voiced"]'),
-    'too-quiet': shadow.querySelector('[data-el="count-too-quiet"]'),
-    'no-pitch': shadow.querySelector('[data-el="count-no-pitch"]'),
-    'out-of-range': shadow.querySelector('[data-el="count-out-of-range"]'),
-  };
 
   let volumeCeilingRms = VOLUME_CEILING_RMS;
   let typicalRms = ASSUMED_TYPICAL_RMS;
@@ -236,7 +265,6 @@ export function mountPanel(hostElement, setup) {
   let calibrating = false;
   let calibrationSamples = [];
 
-  const historyCanvas = shadow.querySelector('[data-el="history-chart"]');
   const rangeLowSelect = shadow.querySelector('[data-field="rangeLowNote"]');
   const rangeHighSelect = shadow.querySelector('[data-field="rangeHighNote"]');
   const targetSelect = shadow.querySelector('[data-field="targetNote"]');
@@ -274,16 +302,21 @@ export function mountPanel(hostElement, setup) {
   let targetDb = null;
   // Held, not cleared: pausing between sentences shouldn't blank the readout.
   let currentNote = null;
+  let announcedNote = null;
 
   function playTone(note) {
     tonePlayer.play(note, {
       gain: toneGain,
       onStart: () => {
         analysisPaused = true;
+        // The pause is necessary — otherwise the panel measures its own tone.
+        // Showing it is what stops a frozen needle reading as a bug.
+        panelEl.classList.add('is-muted');
       },
       onEnd: () => {
         setTimeout(() => {
           analysisPaused = false;
+          panelEl.classList.remove('is-muted');
         }, TONE_RESUME_DELAY_MS);
       },
     });
@@ -328,9 +361,33 @@ export function mountPanel(hostElement, setup) {
   // actually aiming for, with the single target note outlined inside it. The
   // bars themselves are untouched — the zone is a backdrop, so a bar can be
   // read as inside or outside it at a glance.
+  const levelFillEl = shadow.querySelector('[data-el="level-fill"]');
+
+  // Enough to say how long the voice has actually been going, without keeping
+  // a second copy of everything the recorder already holds.
+  const talkingTime = (() => {
+    let firstAtMs = null;
+    let lastAtMs = null;
+    let voiced = 0;
+    let total = 0;
+    return {
+      observe(isVoiced, nowMs) {
+        if (firstAtMs === null) firstAtMs = nowMs;
+        lastAtMs = nowMs;
+        total += 1;
+        if (isVoiced) voiced += 1;
+      },
+      spokenMs() {
+        if (total === 0) return 0;
+        return (lastAtMs - firstAtMs) * (voiced / total);
+      },
+    };
+  })();
+
   let zoneNotes = new Set();
   function markTargetZone(lowNote, highNote, targetNote) {
     zoneNotes = new Set(isValidRange(lowNote, highNote) ? notesInRange(lowNote, highNote) : []);
+    setAll(all('range-note'), zoneNotes.size > 0 ? `· ${lowNote}–${highNote}` : '');
     columnByNote.forEach((column, note) => {
       column.classList.toggle('in-zone', zoneNotes.has(note));
       column.classList.toggle('is-target', note === targetNote);
@@ -358,6 +415,17 @@ export function mountPanel(hostElement, setup) {
 
     const zoneShare = histogram.shareOf(zoneNotes);
     setAll(zoneShareEls, zoneShare === null ? '—' : `${Math.round(zoneShare * 100)}%`);
+
+    all('db-meter').forEach((meter) =>
+      meter.setAttribute('aria-label', currentDb === null ? 'Volume dial, no reading' : `Volume ${Math.round(currentDb)} decibels`)
+    );
+
+    // Only when the note changes: a live region firing four times a second
+    // makes a screen reader unusable.
+    if (currentNote !== announcedNote) {
+      announcedNote = currentNote;
+      setAll(all('live-announcement'), currentNote ? `${currentNote}, ${Math.round(currentDb)} decibels` : '');
+    }
 
     // The bars are the expensive part — 18 style writes. Skip them whenever
     // the face isn't the visible view.
@@ -442,38 +510,15 @@ export function mountPanel(hostElement, setup) {
     }, 5000);
   });
 
-  function renderHistoryChart() {
-    // The chart lives in the details view. Redrawing it on every audio frame
-    // while that view is hidden copied and re-plotted an ever-growing history
-    // ~20x a second, which is what made the panel lag over time.
-    if (shadow.querySelector('[data-view="details"]').hidden) return;
-
-    const ctx = historyCanvas.getContext('2d');
-    ctx.clearRect(0, 0, historyCanvas.width, historyCanvas.height);
-    const voicedPoints = session.getHistory().filter((entry) => entry.category === 'voiced');
-    if (voicedPoints.length === 0) return;
-
-    const minTime = voicedPoints[0].timestampMs;
-    const maxTime = voicedPoints[voicedPoints.length - 1].timestampMs;
-    const timeSpan = Math.max(1, maxTime - minTime);
-
-    ctx.strokeStyle = '#4a6b8a';
-    ctx.beginPath();
-    voicedPoints.forEach((entry, index) => {
-      const x = ((entry.timestampMs - minTime) / timeSpan) * historyCanvas.width;
-      const position = (entry.hz - rangeLowHz) / (rangeHighHz - rangeLowHz);
-      const y = historyCanvas.height - Math.max(0, Math.min(1.2, position)) * historyCanvas.height;
-      if (index === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-  }
-
   function renderReading(reading) {
     if (analysisPaused) return;
 
     if (calibrating) {
       calibrationSamples.push(reading.rms);
+      // Five seconds of an unchanging bar is how you find out the microphone
+      // is dead, instead of calibrating against silence and being told it
+      // worked.
+      levelFillEl.style.width = `${Math.min(1, reading.rms / LEVEL_BAR_FULL_RMS) * 100}%`;
     }
 
     // One clock reading for the whole frame. Calling Date.now() separately
@@ -485,8 +530,6 @@ export function mountPanel(hostElement, setup) {
     noiseFloor.addSample(reading.rms, nowMs);
     const floorRms = noiseFloor.getFloor();
     const classified = classifyFrame(reading, { floorRms });
-    session.record(classified, nowMs);
-    countEls[classified.category].textContent = session.getCounts()[classified.category];
 
     // The dB needle and peak lights track raw volume every frame, regardless
     // of whether a pitch was detected this frame.
@@ -511,6 +554,8 @@ export function mountPanel(hostElement, setup) {
     // to fade the bars out when nobody is talking.
     const voicedNote = classified.category === 'voiced' ? hzToNote(classified.hz) : null;
     histogram.observe(voicedNote, nowMs);
+    recorder.observe({ note: voicedNote, hz: classified.hz, db: currentDb }, nowMs);
+    talkingTime.observe(voicedNote !== null, nowMs);
     if (voicedNote === null) return;
 
     volumeDbCallAverage.add(currentDb);
@@ -519,15 +564,42 @@ export function mountPanel(hostElement, setup) {
     pitchMinuteAverage.add(classified.hz, nowMs);
     currentNote = voicedNote;
 
-    liveHzEl.textContent = `${classified.hz.toFixed(1)} Hz (${currentNote})`;
-    renderHistoryChart();
   }
 
   // Exactly one of face / mini / details is ever visible.
+  let currentView = 'face';
   function showView(name) {
     ['face', 'mini', 'details'].forEach((view) => {
       shadow.querySelector(`[data-view="${view}"]`).hidden = view !== name;
     });
+    currentView = name;
+
+    if (name === 'details') {
+      renderSummary();
+      // Focus was on a button that has just been hidden, so it would fall back
+      // to the Meet page — and the next Tab press would wander into Meet's own
+      // controls rather than the settings just opened.
+      shadow.querySelector('[data-el="details-heading"]').focus();
+    } else {
+      panelEl.focus();
+    }
+    savePlacement();
+  }
+
+  // What the call has come to so far, in the words a person would use. The
+  // four frame counters this replaced were written for whoever was debugging
+  // the detector.
+  function renderSummary() {
+    const nowMs = Date.now();
+    const spokenMs = talkingTime.spokenMs(nowMs);
+    const averageHz = pitchCallAverage.meanHz();
+    const averageDb = volumeDbCallAverage.mean();
+    const zoneShare = histogram.shareOf(zoneNotes);
+
+    setAll(all('sum-talking'), formatDuration(spokenMs));
+    setAll(all('sum-pitch'), averageHz === null ? '—' : `${hzToNote(averageHz)} · ${Math.round(averageHz)} Hz`);
+    setAll(all('sum-zone'), zoneShare === null ? '—' : `${Math.round(zoneShare * 100)}%`);
+    setAll(all('sum-volume'), averageDb === null ? '—' : `${Math.round(averageDb)} dB`);
   }
 
   const VIEW_BUTTONS = {
@@ -542,6 +614,20 @@ export function mountPanel(hostElement, setup) {
       .addEventListener('click', () => showView(view));
   });
 
+  shadow.querySelector('[data-action="export-settings"]').addEventListener('click', async () => {
+    const [setup, calibration] = await Promise.all([
+      prefs?.getSetup() ?? {},
+      prefs?.getCalibration() ?? {},
+    ]);
+    const json = exportSettings({ ...setup, ...calibration });
+    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'fzer0-settings.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+
   // --- Dragging ----------------------------------------------------------
   //
   // Grab the panel anywhere that isn't itself interactive. The bars are
@@ -551,6 +637,19 @@ export function mountPanel(hostElement, setup) {
   const NON_DRAGGABLE = 'button, select, input, option, label';
   let dragOffsetX = 0;
   let dragOffsetY = 0;
+
+  // Where you put the panel, and whether you had it minimised, survive the
+  // call. Otherwise it returns to the top-right corner — over Meet's own
+  // controls — every single time, and you move it again.
+  function savePlacement() {
+    if (!prefs) return;
+    const rect = panelEl.getBoundingClientRect();
+    prefs.savePlacement({
+      left: panelEl.style.left ? Math.round(rect.left) : null,
+      top: panelEl.style.left ? Math.round(rect.top) : null,
+      view: currentView === 'details' ? 'face' : currentView,
+    });
+  }
 
   function clampToViewport(left, top) {
     const { width, height } = panelEl.getBoundingClientRect();
@@ -572,6 +671,7 @@ export function mountPanel(hostElement, setup) {
     panelEl.releasePointerCapture(event.pointerId);
     panelEl.removeEventListener('pointermove', onPointerMove);
     panelEl.classList.remove('dragging');
+    savePlacement();
   }
 
   // Shrinking the window can strand a dragged panel off-screen. While it is
@@ -585,6 +685,27 @@ export function mountPanel(hostElement, setup) {
     panelEl.style.top = `${top}px`;
   }
   window.addEventListener('resize', keepOnScreen);
+
+  // Dragging is pointer-only, which leaves anyone working by keyboard unable
+  // to move a panel that is covering something they need.
+  panelEl.setAttribute('tabindex', '0');
+  panelEl.addEventListener('keydown', (event) => {
+    const step = {
+      ArrowLeft: [-NUDGE_PX, 0],
+      ArrowRight: [NUDGE_PX, 0],
+      ArrowUp: [0, -NUDGE_PX],
+      ArrowDown: [0, NUDGE_PX],
+    }[event.key];
+    if (!step || event.target !== panelEl) return;
+
+    event.preventDefault();
+    const rect = panelEl.getBoundingClientRect();
+    const { left, top } = clampToViewport(rect.left + step[0], rect.top + step[1]);
+    panelEl.style.right = 'auto';
+    panelEl.style.left = `${left}px`;
+    panelEl.style.top = `${top}px`;
+    savePlacement();
+  });
 
   panelEl.addEventListener('pointerdown', (event) => {
     if (event.button !== 0) return;
@@ -610,7 +731,33 @@ export function mountPanel(hostElement, setup) {
   // The caller removes the host element on Meet navigation. Without stopping
   // the readout timer first it would keep firing against detached nodes for
   // the rest of the tab's life.
+  if (prefs) {
+    prefs.getPlacement().then(({ left, top, view }) => {
+      if (left !== null && top !== null) {
+        const placed = clampToViewport(left, top);
+        panelEl.style.right = 'auto';
+        panelEl.style.left = `${placed.left}px`;
+        panelEl.style.top = `${placed.top}px`;
+      }
+      if (view === 'mini') showView('mini');
+    });
+  }
+
+  // The call is the thing being measured, so leaving it is when the record
+  // gets written. Nothing else in the extension was keeping anything.
+  async function saveSession() {
+    const summary = recorder.finish({
+      zoneNotes: [...zoneNotes],
+      rangeLowNote: rangeLowSelect.value,
+      rangeHighNote: rangeHighSelect.value,
+      targetNote: targetSelect.value,
+    });
+    recorder = createSessionRecorder(RANGE_BAND_NOTES);
+    if (summary && prefs) await prefs.addSession(summary);
+  }
+
   function unmount() {
+    saveSession();
     clearInterval(readoutTimer);
     window.removeEventListener('resize', keepOnScreen);
   }

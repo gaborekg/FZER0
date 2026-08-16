@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FZER0",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Measures your voice's fundamental frequency and volume during Google Meet calls.",
   "permissions": [
     "storage"
@@ -10,7 +10,13 @@
     "service_worker": "extension/background.js"
   },
   "action": {
-    "default_title": "FZER0"
+    "default_title": "FZER0",
+    "default_icon": {
+      "16": "extension/icons/icon-16.png",
+      "32": "extension/icons/icon-32.png",
+      "48": "extension/icons/icon-48.png",
+      "128": "extension/icons/icon-128.png"
+    }
   },
   "options_page": "extension/onboarding/onboarding.html",
   "content_scripts": [
@@ -36,5 +42,11 @@
         "https://meet.google.com/*"
       ]
     }
-  ]
+  ],
+  "icons": {
+    "16": "extension/icons/icon-16.png",
+    "32": "extension/icons/icon-32.png",
+    "48": "extension/icons/icon-48.png",
+    "128": "extension/icons/icon-128.png"
+  }
 }

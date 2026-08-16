@@ -161,6 +161,19 @@
         <button class="wide-button" data-action="start-calibration">Start listening</button>
       </div>
 
+      <h2 class="group-title">Move your setup</h2>
+      <div class="card">
+        <p class="card-body">
+          The extension keeps its own storage and cannot reach this one. Export
+          a settings file there, then load it here.
+        </p>
+        <p class="card-status" data-el="import-status" role="status"></p>
+        <label class="wide-button import-button">
+          Load a settings file
+          <input type="file" accept="application/json,.json" data-field="settingsFile" hidden />
+        </label>
+      </div>
+
       <button class="wide-button danger" data-action="clear-sessions">Delete all sessions</button>
 
       <div class="profile-footer">

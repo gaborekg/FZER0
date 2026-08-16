@@ -204,7 +204,7 @@
 }
 
 .stat-label {
-  font-size: clamp(0.55rem, 2.4cqi, 0.6rem);
+  font-size: clamp(0.6875rem, 2.4cqi, 0.72rem);
   font-weight: 700;
 }
 
@@ -228,7 +228,7 @@
 }
 
 .row-label {
-  font-size: clamp(0.5rem, 2.2cqi, 0.58rem);
+  font-size: clamp(0.6875rem, 2.2cqi, 0.7rem);
   color: #6d6b74;
 }
 
@@ -374,7 +374,7 @@
 /* The band is 18 semitones wide, so a bar is ~14px — far too narrow for
    "F#2" lying flat. Turned on its side, each label needs only its height. */
 .bar-label {
-  font-size: 0.5rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   white-space: nowrap;
   writing-mode: vertical-rl;
@@ -436,17 +436,6 @@
 
 /* --- Details view ------------------------------------------------------- */
 
-.details {
-  width: 12rem;
-  max-width: 100%;
-  padding: 0.75rem;
-  background: #202124;
-  color: #e8eaed;
-  font-size: 0.85rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-}
-
 .icon-button {
   all: unset;
   cursor: pointer;
@@ -463,23 +452,176 @@
   background: #e6e5eb;
 }
 
-.details button {
-  display: block;
-  width: 100%;
+
+/* --- Audit fixes ---------------------------------------------------------- */
+
+/* Present to assistive technology, absent to everyone else. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The panel takes keyboard focus so it can be nudged with the arrow keys —
+   dragging is pointer-only, and a panel covering something you need is not a
+   pointer-users-only problem. */
+.panel:focus-visible {
+  outline: 2px solid #2b6b4a;
+  outline-offset: 3px;
+}
+
+/* Playing a tone stops the analysis, or the panel would measure its own tone.
+   Dimming says so, instead of letting a frozen needle read as a bug. */
+.panel.is-muted .card {
+  opacity: 0.55;
+  transition: opacity 0.12s linear;
+}
+
+/* The range the tinted bars refer to, named where the tint is. */
+.range-note {
+  font-weight: 500;
+  color: #6d6b74;
+}
+
+/* --- Settings view -------------------------------------------------------- */
+
+/* Light, like everything else. It was a dark card carrying frame counters and
+   unstyled system dropdowns — the only screen in the product that looked like
+   a debug panel. */
+.details {
+  width: 17rem;
+  max-width: 100%;
+  padding: 0.75rem;
+  background: #f6f5fa;
+  color: #2b2b2b;
+  font-size: 0.85rem;
+  border-radius: 0.9rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  max-height: calc(100vh - 6rem);
+  overflow-y: auto;
+}
+
+.details .card + .card {
   margin-top: 0.5rem;
-  padding: 0.4rem;
+}
+
+.details h2 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.details h2:focus-visible {
+  outline: 2px solid #2b6b4a;
+  outline-offset: 3px;
+}
+
+.sub-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #6d6b74;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 0.6rem;
+  margin: 0;
   font-size: 0.8rem;
 }
 
-dl {
+.summary dt {
+  color: #6d6b74;
+  font-weight: 400;
   margin: 0;
 }
 
-dt {
-  font-weight: bold;
+.summary dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: #6d6b74;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.field select {
+  flex: 0 0 5rem;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: #2b2b2b;
+  background: #eeedf1;
+  border: 1px solid #d3d2d8;
+  border-radius: 0.4rem;
+  padding: 0.25rem 0.35rem;
+}
+
+.wide-button {
+  display: block;
+  width: 100%;
   margin-top: 0.5rem;
+  padding: 0.45rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #2b6b4a;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
 }
 
-dd {
-  margin: 0;
+.wide-button:hover:not(:disabled) {
+  background: #235b3e;
+}
+
+.wide-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.level {
+  height: 0.45rem;
+  margin-top: 0.5rem;
+  background: #e3e2e8;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.level span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: #2b6b4a;
+  border-radius: 0.25rem;
+  transition: width 0.08s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level span,
+  .panel.is-muted .card {
+    transition: none;
+  }
 }

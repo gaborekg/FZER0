@@ -124,3 +124,34 @@ test('saveSetup rejects when chrome.runtime.lastError is set inside the storage.
     delete globalThis.chrome;
   }
 });
+
+test('sessions start empty and come back in the order they were recorded', async () => {
+  const prefs = createPrefsStore(createFakeStorage());
+  assert.deepEqual(await prefs.getSessions(), []);
+
+  await prefs.addSession({ startedAtMs: 1 });
+  await prefs.addSession({ startedAtMs: 2 });
+
+  assert.deepEqual((await prefs.getSessions()).map((s) => s.startedAtMs), [1, 2]);
+});
+
+test('the session log stops at the cap, dropping the oldest', async () => {
+  const prefs = createPrefsStore(createFakeStorage());
+  for (let i = 0; i < 200; i++) await prefs.addSession({ startedAtMs: i });
+
+  const { dropped } = await prefs.addSession({ startedAtMs: 999 });
+  const sessions = await prefs.getSessions();
+
+  assert.equal(dropped, 1);
+  assert.equal(sessions.length, 200);
+  assert.equal(sessions[0].startedAtMs, 1);
+  assert.equal(sessions.at(-1).startedAtMs, 999);
+});
+
+test('recording a session does not disturb the saved setup', async () => {
+  const prefs = createPrefsStore(createFakeStorage());
+  await prefs.saveSetup({ rangeLowNote: 'G2', rangeHighNote: 'D3', targetNote: 'A2' });
+  await prefs.addSession({ startedAtMs: 1 });
+
+  assert.equal((await prefs.getSetup()).targetNote, 'A2');
+});

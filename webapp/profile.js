@@ -1,5 +1,6 @@
 import { RANGE_BAND_NOTES, notesInRange, isValidRange } from '../src/note-hz.js';
 import { computeCeilingFromSamples, computeTypicalFromSamples } from '../src/volume-calibration.js';
+import { importSettings } from '../src/settings-transfer.js';
 import { startCapture } from './audio.js';
 
 const CALIBRATION_MS = 5000;
@@ -98,6 +99,26 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
 
     store.clearSessions();
     onProfileChanged();
+  });
+
+  const importInput = root.querySelector('[data-field="settingsFile"]');
+  const importStatus = root.querySelector('[data-el="import-status"]');
+
+  importInput.addEventListener('change', async () => {
+    const file = importInput.files?.[0];
+    if (!file) return;
+
+    try {
+      store.saveProfile(importSettings(await file.text()));
+      importStatus.textContent = 'Loaded. Your notes and calibration now match the extension.';
+      render();
+      onProfileChanged();
+    } catch (error) {
+      importStatus.textContent = error.message;
+    } finally {
+      // Clearing it means picking the same file twice in a row still fires.
+      importInput.value = '';
+    }
   });
 
   calibrateButton.addEventListener('click', async () => {

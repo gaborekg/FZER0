@@ -1,6 +1,10 @@
 const DEFAULT_STORAGE =
   typeof chrome !== 'undefined' && chrome.storage ? chrome.storage.local : undefined;
 
+// Matches the web app's cap. Far below what the storage area holds — it exists
+// so the log can't grow without bound over years.
+const MAX_SESSIONS = 200;
+
 export function createPrefsStore(storage = DEFAULT_STORAGE) {
   if (!storage) {
     throw new Error('No storage backend available; pass one explicitly for tests.');
@@ -65,5 +69,50 @@ export function createPrefsStore(storage = DEFAULT_STORAGE) {
     return set({ volumeCeilingRms, typicalRms });
   }
 
-  return { getSetup, saveSetup, getCalibration, saveCalibration };
+  // The record of finished calls. Same shape and the same cap as the web app's
+  // log — the two stores cannot see each other, but there is no reason for the
+  // data in them to differ.
+  function getSessions() {
+    return new Promise((resolve) => {
+      storage.get(['sessions'], (result) => {
+        resolve(Array.isArray(result.sessions) ? result.sessions : []);
+      });
+    });
+  }
+
+  async function addSession(summary) {
+    const sessions = [...(await getSessions()), summary];
+    const dropped = Math.max(0, sessions.length - MAX_SESSIONS);
+    await set({ sessions: dropped > 0 ? sessions.slice(dropped) : sessions });
+    return { dropped };
+  }
+
+  // Where the panel sits and whether it was minimised. Its own keys, like the
+  // calibration, so saving a range can never move the panel and vice versa.
+  function getPlacement() {
+    return new Promise((resolve) => {
+      storage.get(['panelLeft', 'panelTop', 'panelView'], (result) => {
+        resolve({
+          left: typeof result.panelLeft === 'number' ? result.panelLeft : null,
+          top: typeof result.panelTop === 'number' ? result.panelTop : null,
+          view: result.panelView === 'mini' ? 'mini' : 'face',
+        });
+      });
+    });
+  }
+
+  function savePlacement({ left, top, view }) {
+    return set({ panelLeft: left, panelTop: top, panelView: view });
+  }
+
+  return {
+    getSetup,
+    saveSetup,
+    getCalibration,
+    saveCalibration,
+    getSessions,
+    addSession,
+    getPlacement,
+    savePlacement,
+  };
 }

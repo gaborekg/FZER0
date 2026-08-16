@@ -36,6 +36,22 @@ document.querySelector('[data-action="know-tone-yes"]').addEventListener('click'
   showScreen('setup');
 });
 
+// Both refusals used to be dead ends with no button on them at all — change
+// your mind and the only way forward was reinstalling the extension. Going to
+// find your fundamental tone and coming back is the entire point of sending
+// someone to a pathologist, so that road has to run both ways.
+document.querySelector('[data-action="reconsider-mic"]').addEventListener('click', () => {
+  showScreen('disclaimer');
+});
+
+document.querySelector('[data-action="reconsider-tone"]').addEventListener('click', () => {
+  showScreen('instructions');
+});
+
+document.querySelector('[data-action="tone-found"]').addEventListener('click', () => {
+  showScreen('setup');
+});
+
 function populateSelect(select, notes) {
   select.innerHTML = '';
   for (const note of notes) {

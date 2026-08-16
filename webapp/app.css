@@ -790,6 +790,11 @@ select.row-input {
   cursor: pointer;
 }
 
+.import-button {
+  text-align: center;
+  cursor: pointer;
+}
+
 .wide-button:disabled {
   opacity: 0.55;
   cursor: default;
