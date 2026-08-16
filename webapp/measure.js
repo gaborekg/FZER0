@@ -7,7 +7,7 @@ import { createSessionRecorder } from '../src/session-recorder.js';
 import { createTonePlayer } from '../src/tone-player.js';
 import { buildDbMeterSvg, dbFromLevel } from '../src/db-meter.js';
 import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS } from '../src/config.js';
-import { startCapture } from './audio.js';
+import { getAudioContext, startCapture } from './audio.js';
 
 const READOUT_INTERVAL_MS = 250;
 const NOTE_DECAY_HALF_LIFE_MS = 10_000;
@@ -58,7 +58,9 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
   const playButton = root.querySelector('[data-action="play-tone"]');
   const announcementEl = root.querySelector('[data-el="live-announcement"]');
 
-  const tonePlayer = createTonePlayer();
+  // The one shared context, so the tone and the microphone are never two
+  // competing audio graphs on a phone.
+  const tonePlayer = createTonePlayer(getAudioContext);
 
   const fillByNote = new Map();
   const columnByNote = new Map();

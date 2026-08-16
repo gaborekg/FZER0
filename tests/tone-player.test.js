@@ -121,3 +121,38 @@ test('onEnd runs exactly once when the oscillator does report ending', async () 
   await new Promise((resolve) => setTimeout(resolve, 400));
   assert.equal(ended, 1, 'the fallback did not fire a second time');
 });
+
+test('the tone fades in and out instead of switching on at full amplitude', () => {
+  // A sine started and stopped abruptly clicks at both ends, which on a phone
+  // speaker is most of what you hear.
+  const { fakeContext, calls } = createFakeAudioContext();
+  const ramps = [];
+  const holds = [];
+  fakeContext.createGain = () => {
+    const gainNode = {
+      connect() {},
+      gain: {
+        value: 1,
+        setValueAtTime: (value, at) => holds.push([value, at]),
+        linearRampToValueAtTime: (value, at) => ramps.push([value, at]),
+      },
+    };
+    calls.gains.push(gainNode);
+    return gainNode;
+  };
+
+  createTonePlayer(() => fakeContext).play('A2', { durationMs: 1000, gain: 0.4 });
+
+  assert.equal(holds[0][0], 0, 'starts from silence');
+  assert.equal(ramps[0][0], 0.4, 'rises to the requested gain');
+  assert.equal(ramps.at(-1)[0], 0, 'and returns to silence');
+  assert.ok(ramps.at(-1)[1] > ramps[0][1], 'the release comes after the attack');
+});
+
+test('a gain node without ramp support still plays, just without the fades', () => {
+  // The extension and the tests both hand in plainer objects than a real
+  // AudioContext; losing the envelope must not mean losing the tone.
+  const { fakeContext, calls } = createFakeAudioContext();
+  assert.doesNotThrow(() => createTonePlayer(() => fakeContext).play('A2'));
+  assert.equal(calls.oscillators[0].started, true);
+});

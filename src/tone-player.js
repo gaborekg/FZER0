@@ -11,6 +11,12 @@ const FINISH_GRACE_MS = 300;
 // already passed by the time it actually resumes.
 const START_LEAD_SECONDS = 0.05;
 
+// A sine switched on and off at full amplitude clicks at both ends. Short
+// ramps remove that, and on a phone speaker the click is loud enough to be
+// most of what you hear.
+const ATTACK_SECONDS = 0.015;
+const RELEASE_SECONDS = 0.06;
+
 export function createTonePlayer(audioContextFactory = () => new AudioContext()) {
   let audioContext = null;
   let unlocked = false;
@@ -58,8 +64,20 @@ export function createTonePlayer(audioContextFactory = () => new AudioContext())
     if (onStart) onStart();
 
     const startAt = (ctx.currentTime ?? 0) + START_LEAD_SECONDS;
+    const durationSeconds = durationMs / 1000;
+    const endAt = startAt + durationSeconds;
+
+    // Fade in and out. Scheduled rather than set, so the shape is the audio
+    // thread's job and a busy main thread cannot smear it.
+    if (typeof gainNode.gain.linearRampToValueAtTime === 'function') {
+      gainNode.gain.setValueAtTime(0, startAt);
+      gainNode.gain.linearRampToValueAtTime(gain, startAt + ATTACK_SECONDS);
+      gainNode.gain.setValueAtTime(gain, endAt - RELEASE_SECONDS);
+      gainNode.gain.linearRampToValueAtTime(0, endAt);
+    }
+
     oscillator.start(startAt);
-    oscillator.stop(startAt + durationMs / 1000);
+    oscillator.stop(endAt);
 
     // Callers pause their analysis for the length of the tone and rely on this
     // to start again. `onended` never fires if the context stays suspended, so
