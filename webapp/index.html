@@ -161,6 +161,27 @@
         <button class="wide-button" data-action="start-calibration">Start listening</button>
       </div>
 
+      <h2 class="group-title">Tone volume</h2>
+      <div class="card">
+        <p class="card-body">
+          No browser can tell how loud your headphones are turned up, so this is
+          the one part you set yourself.
+        </p>
+        <div class="slider-row">
+          <input
+            class="slider"
+            type="range"
+            min="0.2"
+            max="2"
+            step="0.05"
+            data-field="toneVolume"
+            aria-label="Tone volume"
+          />
+          <span class="slider-value" data-el="tone-volume-value">100%</span>
+        </div>
+        <button class="wide-button" data-action="preview-tone">Play your tone</button>
+      </div>
+
       <h2 class="group-title">Move your setup</h2>
       <div class="card">
         <p class="card-body">

@@ -625,3 +625,25 @@
     transition: none;
   }
 }
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: #2b6b4a;
+}
+
+.slider-value {
+  flex: 0 0 2.6rem;
+  text-align: right;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #2b6b4a;
+}

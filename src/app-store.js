@@ -22,6 +22,7 @@ export const EMPTY_PROFILE = {
   targetNote: '',
   volumeCeilingRms: null,
   typicalRms: null,
+  toneVolume: 1,
 };
 
 export function createAppStore(storage) {

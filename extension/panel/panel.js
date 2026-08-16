@@ -13,6 +13,11 @@ import {
 } from '../../src/stats.js';
 import { dbFromLevel, buildDbMeterSvg } from '../../src/db-meter.js';
 import { computeCeilingFromSamples, computeTypicalFromSamples } from '../../src/volume-calibration.js';
+import {
+  toneGainFor,
+  ASSUMED_TYPICAL_RMS,
+  DEFAULT_TONE_VOLUME,
+} from '../../src/tone-gain.js';
 import { createPrefsStore } from '../../src/prefs.js';
 import { exportSettings } from '../../src/settings-transfer.js';
 import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS } from '../../src/config.js';
@@ -158,6 +163,16 @@ const PANEL_HTML = `
     </div>
 
     <div class="card">
+      <h3 class="sub-title">Tone volume</h3>
+      <p class="hint">No browser can tell how loud your headphones are, so this part is yours.</p>
+      <div class="slider-row">
+        <input class="slider" type="range" min="0.2" max="2" step="0.05"
+               data-field="toneVolume" aria-label="Tone volume" />
+        <span class="slider-value" data-el="tone-volume-value">100%</span>
+      </div>
+    </div>
+
+    <div class="card">
       <h3 class="sub-title">Move your setup</h3>
       <p class="hint">
         The extension and the web app keep separate storage, so your notes and
@@ -211,10 +226,6 @@ function formatDuration(ms) {
 // from silence to 130 dB SPL. Printing a textbook "60 dB" on it would be a
 // number with nothing behind it. Anchoring the target to the user's measured
 // comfortable level is the same clinical advice, on a scale that is real here.
-const ASSUMED_TYPICAL_RMS = 0.02;
-const DEFAULT_TONE_GAIN = 0.2;
-const MIN_TONE_GAIN = 0.05;
-const MAX_TONE_GAIN = 0.6;
 
 export function mountPanel(hostElement, setup) {
   const shadow = hostElement.attachShadow({ mode: 'open' });
@@ -261,7 +272,8 @@ export function mountPanel(hostElement, setup) {
 
   let volumeCeilingRms = VOLUME_CEILING_RMS;
   let typicalRms = ASSUMED_TYPICAL_RMS;
-  let toneGain = DEFAULT_TONE_GAIN;
+  let toneVolume = DEFAULT_TONE_VOLUME;
+  let toneGain = toneGainFor({});
   let calibrating = false;
   let calibrationSamples = [];
 
@@ -362,6 +374,8 @@ export function mountPanel(hostElement, setup) {
   // bars themselves are untouched — the zone is a backdrop, so a bar can be
   // read as inside or outside it at a glance.
   const levelFillEl = shadow.querySelector('[data-el="level-fill"]');
+  const toneVolumeInput = shadow.querySelector('[data-field="toneVolume"]');
+  const toneVolumeValueEl = shadow.querySelector('[data-el="tone-volume-value"]');
 
   // Enough to say how long the voice has actually been going, without keeping
   // a second copy of everything the recorder already holds.
@@ -467,10 +481,7 @@ export function mountPanel(hostElement, setup) {
   function applyCalibration(ceilingRms, measuredTypicalRms) {
     volumeCeilingRms = ceilingRms;
     typicalRms = measuredTypicalRms;
-    toneGain = Math.max(
-      MIN_TONE_GAIN,
-      Math.min(MAX_TONE_GAIN, DEFAULT_TONE_GAIN * (typicalRms / ASSUMED_TYPICAL_RMS))
-    );
+    toneGain = toneGainFor({ typicalRms, toneVolume });
   }
 
   // Sitting through the five-second calibration once per call is the kind of
@@ -506,7 +517,7 @@ export function mountPanel(hostElement, setup) {
         computeTypicalFromSamples(calibrationSamples)
       );
       calibrateButton.textContent = 'Saved — set it again';
-      if (prefs) await prefs.saveCalibration({ volumeCeilingRms, typicalRms });
+      if (prefs) await prefs.saveCalibration({ volumeCeilingRms, typicalRms, toneVolume });
     }, 5000);
   });
 
@@ -612,6 +623,19 @@ export function mountPanel(hostElement, setup) {
     shadow
       .querySelector(`[data-action="${action}"]`)
       .addEventListener('click', () => showView(view));
+  });
+
+  function showToneVolume() {
+    toneVolumeValueEl.textContent = `${Math.round(Number(toneVolumeInput.value) * 100)}%`;
+  }
+
+  toneVolumeInput.value = toneVolume;
+  showToneVolume();
+  toneVolumeInput.addEventListener('input', showToneVolume);
+  toneVolumeInput.addEventListener('change', async () => {
+    toneVolume = Number(toneVolumeInput.value);
+    toneGain = toneGainFor({ typicalRms, toneVolume });
+    if (prefs) await prefs.saveCalibration({ volumeCeilingRms, typicalRms, toneVolume });
   });
 
   shadow.querySelector('[data-action="export-settings"]').addEventListener('click', async () => {

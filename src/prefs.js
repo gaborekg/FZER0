@@ -56,17 +56,18 @@ export function createPrefsStore(storage = DEFAULT_STORAGE) {
   // panel happened to be holding.
   function getCalibration() {
     return new Promise((resolve) => {
-      storage.get(['volumeCeilingRms', 'typicalRms'], (result) => {
+      storage.get(['volumeCeilingRms', 'typicalRms', 'toneVolume'], (result) => {
         resolve({
           volumeCeilingRms: result.volumeCeilingRms ?? null,
           typicalRms: result.typicalRms ?? null,
+          toneVolume: typeof result.toneVolume === 'number' ? result.toneVolume : 1,
         });
       });
     });
   }
 
-  function saveCalibration({ volumeCeilingRms, typicalRms }) {
-    return set({ volumeCeilingRms, typicalRms });
+  function saveCalibration({ volumeCeilingRms, typicalRms, toneVolume = 1 }) {
+    return set({ volumeCeilingRms, typicalRms, toneVolume });
   }
 
   // The record of finished calls. Same shape and the same cap as the web app's

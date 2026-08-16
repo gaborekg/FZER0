@@ -1,7 +1,9 @@
 import { RANGE_BAND_NOTES, notesInRange, isValidRange } from '../src/note-hz.js';
 import { computeCeilingFromSamples, computeTypicalFromSamples } from '../src/volume-calibration.js';
 import { importSettings } from '../src/settings-transfer.js';
-import { startCapture } from './audio.js';
+import { createTonePlayer } from '../src/tone-player.js';
+import { toneGainFor } from '../src/tone-gain.js';
+import { getAudioContext, startCapture } from './audio.js';
 
 const CALIBRATION_MS = 5000;
 
@@ -14,6 +16,7 @@ const LEVEL_BAR_FULL_RMS = 0.06;
 const THERAPIST_SEARCH_URL = 'https://www.google.com/maps/search/speech+therapist';
 
 const TEXT_FIELDS = ['firstName', 'lastName', 'yearOfBirth', 'sex'];
+const SLIDER_FIELDS = ['toneVolume'];
 const NOTE_FIELDS = ['fundamentalNote', 'rangeLowNote', 'rangeHighNote', 'targetNote'];
 
 function fillSelect(select, notes, selected) {
@@ -35,8 +38,15 @@ function fillSelect(select, notes, selected) {
 
 export function createProfileScreen(root, { store, onProfileChanged, isRecording }) {
   const inputs = Object.fromEntries(
-    [...TEXT_FIELDS, ...NOTE_FIELDS].map((name) => [name, root.querySelector(`[data-field="${name}"]`)])
+    [...TEXT_FIELDS, ...NOTE_FIELDS, ...SLIDER_FIELDS].map((name) => [
+      name,
+      root.querySelector(`[data-field="${name}"]`),
+    ])
   );
+  const toneVolumeValueEl = root.querySelector('[data-el="tone-volume-value"]');
+  // Shares the app's one audio context, so previewing here cannot start a
+  // second graph competing with the microphone.
+  const tonePlayer = createTonePlayer(getAudioContext);
   const statusEl = root.querySelector('[data-el="calibration-status"]');
   const levelFill = root.querySelector('[data-el="level-fill"]');
   const calibrateButton = root.querySelector('[data-action="start-calibration"]');
@@ -54,6 +64,8 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
     TEXT_FIELDS.forEach((name) => {
       inputs[name].value = profile[name] ?? '';
     });
+    inputs.toneVolume.value = profile.toneVolume ?? 1;
+    showToneVolume(profile.toneVolume ?? 1);
     fillSelect(inputs.fundamentalNote, RANGE_BAND_NOTES, profile.fundamentalNote);
     fillSelect(inputs.rangeLowNote, RANGE_BAND_NOTES, profile.rangeLowNote);
     fillSelect(inputs.rangeHighNote, RANGE_BAND_NOTES, profile.rangeHighNote);
@@ -77,8 +89,32 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
     onProfileChanged();
   }
 
+  function showToneVolume(volume) {
+    toneVolumeValueEl.textContent = `${Math.round(Number(volume) * 100)}%`;
+  }
+
   [...TEXT_FIELDS, ...NOTE_FIELDS].forEach((name) => {
     inputs[name].addEventListener('change', () => save(name, inputs[name].value));
+  });
+
+  // Updates as it moves so the number tracks the thumb, but only writes on
+  // release — a slider fires continuously and every input would be a save.
+  inputs.toneVolume.addEventListener('input', () => showToneVolume(inputs.toneVolume.value));
+  inputs.toneVolume.addEventListener('change', () =>
+    save('toneVolume', Number(inputs.toneVolume.value))
+  );
+
+  root.querySelector('[data-action="preview-tone"]').addEventListener('click', () => {
+    const profile = store.getProfile();
+    const note = profile.targetNote || profile.fundamentalNote;
+    if (!note) {
+      statusEl.textContent = 'Set your target note first.';
+      return;
+    }
+    // Straight from the slider, so you hear the change before it is saved.
+    tonePlayer.play(note, {
+      gain: toneGainFor({ ...profile, toneVolume: Number(inputs.toneVolume.value) }),
+    });
   });
 
   root.querySelector('[data-action="find-therapist"]').addEventListener('click', () => {

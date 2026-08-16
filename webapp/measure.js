@@ -5,6 +5,7 @@ import { classifyFrame } from '../src/gate.js';
 import { createDecayingHistogram, createRunningMean } from '../src/stats.js';
 import { createSessionRecorder } from '../src/session-recorder.js';
 import { createTonePlayer } from '../src/tone-player.js';
+import { toneGainFor, ASSUMED_TYPICAL_RMS } from '../src/tone-gain.js';
 import { buildDbMeterSvg, dbFromLevel } from '../src/db-meter.js';
 import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS } from '../src/config.js';
 import { getAudioContext, startCapture } from './audio.js';
@@ -15,21 +16,6 @@ const NOTE_DECAY_HALF_LIFE_MS = 10_000;
 // How far the last audio frame can fall behind the wall clock before the tab
 // is treated as having stopped measuring rather than merely being quiet.
 const STALL_GRACE_MS = 4000;
-
-// Matches the extension: the reference tone plays at the user's own measured
-// speaking level, so matching it never means pushing the voice.
-const ASSUMED_TYPICAL_RMS = 0.02;
-const DEFAULT_TONE_GAIN = 0.2;
-const MIN_TONE_GAIN = 0.05;
-const MAX_TONE_GAIN = 0.6;
-
-function toneGainFor(typicalRms) {
-  if (!typicalRms) return DEFAULT_TONE_GAIN;
-  return Math.max(
-    MIN_TONE_GAIN,
-    Math.min(MAX_TONE_GAIN, DEFAULT_TONE_GAIN * (typicalRms / ASSUMED_TYPICAL_RMS))
-  );
-}
 
 function formatElapsed(ms) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -315,7 +301,7 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
 
   function playNote(note) {
     tonePlayer.play(note, {
-      gain: toneGainFor(profile.typicalRms),
+      gain: toneGainFor(profile),
       onStart: () => {
         analysisPaused = true;
       },

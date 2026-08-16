@@ -59,15 +59,17 @@ test('getCalibration returns nulls when nothing has been measured', async () => 
   assert.deepEqual(await prefs.getCalibration(), {
     volumeCeilingRms: null,
     typicalRms: null,
+    toneVolume: 1,
   });
 });
 
 test('saveCalibration then getCalibration round-trips the measurements', async () => {
   const prefs = createPrefsStore(createFakeStorage());
-  await prefs.saveCalibration({ volumeCeilingRms: 0.061, typicalRms: 0.023 });
+  await prefs.saveCalibration({ volumeCeilingRms: 0.061, typicalRms: 0.023, toneVolume: 1.4 });
   assert.deepEqual(await prefs.getCalibration(), {
     volumeCeilingRms: 0.061,
     typicalRms: 0.023,
+    toneVolume: 1.4,
   });
 });
 
@@ -81,6 +83,7 @@ test('saveSetup does not clobber a saved calibration', async () => {
   assert.deepEqual(await prefs.getCalibration(), {
     volumeCeilingRms: 0.061,
     typicalRms: 0.023,
+    toneVolume: 1,
   });
 });
 
