@@ -82,3 +82,42 @@ test('reuses the same AudioContext across multiple play calls', () => {
   player.play('C3');
   assert.equal(factoryCalls, 1);
 });
+
+test('a suspended context is resumed before the tone starts', () => {
+  // Safari hands back suspended contexts; start() on one is silent.
+  const { fakeContext } = createFakeAudioContext();
+  fakeContext.state = 'suspended';
+  let resumed = false;
+  fakeContext.resume = () => {
+    resumed = true;
+  };
+
+  createTonePlayer(() => fakeContext).play('A2');
+  assert.equal(resumed, true);
+});
+
+test('onEnd still runs when the oscillator never reports ending', async () => {
+  // The failure this guards: a silent tone leaves analysis paused forever.
+  const { fakeContext, calls } = createFakeAudioContext();
+  let ended = 0;
+  createTonePlayer(() => fakeContext).play('A2', { durationMs: 10, onEnd: () => { ended += 1; } });
+
+  assert.equal(ended, 0, 'not before the tone would have finished');
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  assert.equal(ended, 1);
+
+  // And the real callback must not double up with the fallback.
+  calls.oscillators[0].onended?.();
+  assert.equal(ended, 1);
+});
+
+test('onEnd runs exactly once when the oscillator does report ending', async () => {
+  const { fakeContext, calls } = createFakeAudioContext();
+  let ended = 0;
+  createTonePlayer(() => fakeContext).play('A2', { durationMs: 10, onEnd: () => { ended += 1; } });
+
+  calls.oscillators[0].onended();
+  assert.equal(ended, 1);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  assert.equal(ended, 1, 'the fallback did not fire a second time');
+});
