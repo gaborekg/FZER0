@@ -1,4 +1,5 @@
-import { RANGE_BAND_NOTES, notesInRange, isValidRange } from '../src/note-hz.js';
+import { notesInRange, isValidRange } from '../src/note-hz.js';
+import { bandNotesFor, clampRangeToBand } from '../src/voice-bands.js';
 import { computeCeilingFromSamples, computeTypicalFromSamples } from '../src/volume-calibration.js';
 import { importSettings } from '../src/settings-transfer.js';
 import { createTonePlayer } from '../src/tone-player.js';
@@ -64,14 +65,23 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
     });
     inputs.toneVolume.value = profile.toneVolume ?? 1;
     showToneVolume(profile.toneVolume ?? 1);
-    fillSelect(inputs.fundamentalNote, RANGE_BAND_NOTES, profile.fundamentalNote);
-    fillSelect(inputs.rangeLowNote, RANGE_BAND_NOTES, profile.rangeLowNote);
-    fillSelect(inputs.rangeHighNote, RANGE_BAND_NOTES, profile.rangeHighNote);
+    const notes = bandNotesFor(profile.sex);
+    fillSelect(inputs.fundamentalNote, notes, profile.fundamentalNote);
+    fillSelect(inputs.rangeLowNote, notes, profile.rangeLowNote);
+    fillSelect(inputs.rangeHighNote, notes, profile.rangeHighNote);
     refreshTargetOptions(profile);
   }
 
   function save(name, value) {
     let profile = store.saveProfile({ [name]: value });
+
+    // Changing this changes which notes the chart has at all, so a range
+    // chosen under the old band has to be brought inside the new one.
+    if (name === 'sex') {
+      profile = store.saveProfile(clampRangeToBand(profile, profile.sex));
+      render();
+      statusEl.textContent = `Notes now cover a ${bandNotesFor(profile.sex).length}-semitone range for this voice.`;
+    }
 
     // A target outside the new range is no longer a target. Clearing it beats
     // silently keeping a note the chart can't show.

@@ -510,10 +510,14 @@ body[data-screen='measure'] {
   transform: rotate(180deg);
 }
 
-/* Every semitone the chart records gets a label. Rotated, a label is only as
-   wide as its font size, so eighteen of them at 11px need about 200px — which
-   is less than the chart has even on a small phone. Hiding the sharps made the
-   scale look like it skipped notes it was in fact measuring. */
+/* Rotated, a label is only as wide as its font size, so eighteen at 11px fit
+   comfortably on a phone. A wider band does not, and the sharps step back —
+   driven by how many bars there are rather than by the viewport, because that
+   is what actually decides whether they fit. */
+.bar-label[data-crowded='true'][data-accidental='true'] {
+  visibility: hidden;
+}
+
 @media (max-width: 22rem) {
   .bar-label {
     font-size: 0.625rem;

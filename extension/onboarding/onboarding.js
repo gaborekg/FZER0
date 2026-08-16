@@ -1,4 +1,5 @@
-import { RANGE_BAND_NOTES, notesInRange, isValidRange } from '../../src/note-hz.js';
+import { notesInRange, isValidRange } from '../../src/note-hz.js';
+import { bandNotesFor } from '../../src/voice-bands.js';
 import { createPrefsStore } from '../../src/prefs.js';
 import {
   computeCeilingFromSamples,
@@ -80,8 +81,11 @@ function clearSetupError() {
   setupError.hidden = true;
 }
 
-populateSelect(lowSelect, RANGE_BAND_NOTES);
-populateSelect(highSelect, RANGE_BAND_NOTES);
+// The widest band: nobody has said which voice this is yet, and a chart that
+// excludes someone before they have answered is the wrong first impression.
+const SETUP_NOTES = bandNotesFor('');
+populateSelect(lowSelect, SETUP_NOTES);
+populateSelect(highSelect, SETUP_NOTES);
 // Default the high end to the LAST band note (not the first, which is what
 // populateSelect leaves selected by default) so an untouched submit already
 // has a valid, non-zero-width range. Without this, an untouched form saves
@@ -90,7 +94,7 @@ populateSelect(highSelect, RANGE_BAND_NOTES);
 // breaks the in-call panel's gaugePosition math (divides by
 // rangeHighHz - rangeLowHz, which is zero). Set before the initial
 // refreshTargetOptions() call below, since that call reads highSelect.value.
-highSelect.value = RANGE_BAND_NOTES[RANGE_BAND_NOTES.length - 1];
+highSelect.value = SETUP_NOTES[SETUP_NOTES.length - 1];
 
 function refreshTargetOptions() {
   try {

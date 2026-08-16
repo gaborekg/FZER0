@@ -1,5 +1,6 @@
 import { volumeLevel, volumeVerdict } from '../src/gauge.js';
-import { notesInRange, hzToNote, isValidRange, RANGE_BAND_NOTES } from '../src/note-hz.js';
+import { notesInRange, hzToNote, isValidRange } from '../src/note-hz.js';
+import { bandNotesFor } from '../src/voice-bands.js';
 import { createNoiseFloor } from '../src/noise-floor.js';
 import { classifyFrame } from '../src/gate.js';
 import { createDecayingHistogram, createRunningMean } from '../src/stats.js';
@@ -54,20 +55,37 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
 
   const fillByNote = new Map();
   const columnByNote = new Map();
+  let bandNotes = [];
 
-  RANGE_BAND_NOTES.forEach((note) => {
-    const column = document.createElement('div');
-    column.className = 'note-bar';
-    column.innerHTML = `
-      <button type="button" class="bar-track" data-play-note="${note}" aria-label="Play ${note}">
-        <span class="bar-fill"></span>
-      </button>
-      <span class="bar-label" data-accidental="${note.includes('#')}">${note}</span>
-    `;
-    barsEl.appendChild(column);
-    fillByNote.set(note, column.querySelector('.bar-fill'));
-    columnByNote.set(note, column);
-  });
+  function buildBars(notes) {
+    bandNotes = notes;
+    barsEl.replaceChildren();
+    fillByNote.clear();
+    columnByNote.clear();
+
+    // Past twenty bars there is not room for every label, so the sharps step
+    // back and the naturals carry the scale. A bar with no label is still
+    // readable by position; overlapping text is not.
+    const crowded = notes.length > 20;
+
+    notes.forEach((note) => {
+      const column = document.createElement('div');
+      column.className = 'note-bar';
+      column.innerHTML = `
+        <button type="button" class="bar-track" data-play-note="${note}" aria-label="Play ${note}">
+          <span class="bar-fill"></span>
+        </button>
+        <span class="bar-label" data-accidental="${note.includes('#')}" data-crowded="${crowded}">${note}</span>
+      `;
+      barsEl.appendChild(column);
+      fillByNote.set(note, column.querySelector('.bar-fill'));
+      columnByNote.set(note, column);
+    });
+
+    barsEl.querySelectorAll('[data-play-note]').forEach((button) => {
+      button.addEventListener('click', () => playNote(button.dataset.playNote));
+    });
+  }
 
   // --- state ---------------------------------------------------------------
   let profile = store.getProfile();
@@ -79,7 +97,7 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
   let analysisPaused = false;
 
   let noiseFloor = createNoiseFloor();
-  let histogram = createDecayingHistogram(RANGE_BAND_NOTES, NOTE_DECAY_HALF_LIFE_MS);
+  let histogram = createDecayingHistogram([], NOTE_DECAY_HALF_LIFE_MS);
   let volumeAverage = createRunningMean();
   let currentDb = null;
   let currentNote = null;
@@ -154,7 +172,7 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
     currentNote = null;
     announcedNote = null;
     volumeAverage = createRunningMean();
-    histogram = createDecayingHistogram(RANGE_BAND_NOTES, NOTE_DECAY_HALF_LIFE_MS);
+    histogram = createDecayingHistogram(bandNotes, NOTE_DECAY_HALF_LIFE_MS);
     needleEl.style.transform = 'rotate(-90deg)';
     peakLightEls.forEach((light) => light.setAttribute('fill', 'none'));
     announcementEl.textContent = '';
@@ -222,7 +240,7 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
   // --- recording -----------------------------------------------------------
   function resetLiveState() {
     noiseFloor = createNoiseFloor();
-    histogram = createDecayingHistogram(RANGE_BAND_NOTES, NOTE_DECAY_HALF_LIFE_MS);
+    histogram = createDecayingHistogram(bandNotes, NOTE_DECAY_HALF_LIFE_MS);
     volumeAverage = createRunningMean();
     currentDb = null;
     currentNote = null;
@@ -247,7 +265,7 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
     hideMicHelp();
 
     resetLiveState();
-    recorder = createSessionRecorder(RANGE_BAND_NOTES);
+    recorder = createSessionRecorder(bandNotes);
     readoutTimer = setInterval(renderReadouts, READOUT_INTERVAL_MS);
     await requestWakeLock();
 
@@ -300,10 +318,6 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
   recordButton.addEventListener('click', () => {
     if (capture) stop();
     else start();
-  });
-
-  barsEl.querySelectorAll('[data-play-note]').forEach((button) => {
-    button.addEventListener('click', () => playNote(button.dataset.playNote));
   });
 
   function playNote(note) {
@@ -399,6 +413,16 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
 
   function applyProfile() {
     profile = store.getProfile();
+
+    // Rebuilt only when the band actually changes — this runs on every profile
+    // edit, and throwing away the chart because a name was typed would also
+    // throw away the live histogram.
+    const notes = bandNotesFor(profile.sex);
+    if (notes.length !== bandNotes.length || notes[0] !== bandNotes[0]) {
+      buildBars(notes);
+      histogram = createDecayingHistogram(notes, NOTE_DECAY_HALF_LIFE_MS);
+    }
+
     paintZone();
 
     // Measuring against nothing produces a session with no in-range figure and

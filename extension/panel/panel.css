@@ -431,6 +431,12 @@
   }
 }
 
+/* A wider voice band means more bars in the same width, so the sharps step
+   back — decided by how many there are, not by the panel's size. */
+.bar-label[data-crowded='true'][data-accidental='true'] {
+  visibility: hidden;
+}
+
 @container face (max-width: 200px) {
   .bar-label {
     display: none;

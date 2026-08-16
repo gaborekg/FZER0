@@ -8,10 +8,12 @@
 export const FORMAT = 'fzer0.settings';
 export const VERSION = 1;
 
-// Only the fields that describe the voice. Names, sessions and anything else
-// personal stay where they are; this file is meant to be small enough that
-// exporting it is not a decision.
+// Only the fields that describe the voice — which includes sex, because it
+// decides which notes the chart covers. Names, dates, sessions and anything
+// else personal stay where they are; this file is meant to be small enough
+// that exporting it is not a decision.
 export const TRANSFERABLE = [
+  'sex',
   'fundamentalNote',
   'rangeLowNote',
   'rangeHighNote',

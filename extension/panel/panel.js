@@ -1,5 +1,6 @@
 import { volumeLevel, volumeVerdict } from '../../src/gauge.js';
-import { noteToHz, notesInRange, hzToNote, isValidRange, RANGE_BAND_NOTES } from '../../src/note-hz.js';
+import { noteToHz, notesInRange, hzToNote, isValidRange } from '../../src/note-hz.js';
+import { bandNotesFor, clampRangeToBand } from '../../src/voice-bands.js';
 import { createNoiseFloor } from '../../src/noise-floor.js';
 import { classifyFrame } from '../../src/gate.js';
 import { createSessionRecorder } from '../../src/session-recorder.js';
@@ -137,6 +138,16 @@ const PANEL_HTML = `
     <div class="card">
       <h3 class="sub-title">Your range</h3>
       <label class="field">
+        <span>Voice</span>
+        <select data-field="sex">
+          <option value="">Unspecified</option>
+          <option>Female</option>
+          <option>Male</option>
+          <option>Intersex</option>
+          <option>Prefer not to say</option>
+        </select>
+      </label>
+      <label class="field">
         <span>Lowest note</span>
         <select data-field="rangeLowNote"></select>
       </label>
@@ -239,7 +250,7 @@ export function mountPanel(hostElement, setup) {
   let rangeHighHz = noteToHz(setup.rangeHighNote);
 
   const noiseFloor = createNoiseFloor();
-  let recorder = createSessionRecorder(RANGE_BAND_NOTES);
+  let recorder = createSessionRecorder(bandNotesFor(setup.sex));
   const tonePlayer = createTonePlayer();
 
   let analysisPaused = false;
@@ -276,6 +287,7 @@ export function mountPanel(hostElement, setup) {
   const rangeLowSelect = shadow.querySelector('[data-field="rangeLowNote"]');
   const rangeHighSelect = shadow.querySelector('[data-field="rangeHighNote"]');
   const targetSelect = shadow.querySelector('[data-field="targetNote"]');
+  const sexSelect = shadow.querySelector('[data-field="sex"]');
   let prefs = null;
   try {
     prefs = createPrefsStore();
@@ -295,8 +307,9 @@ export function mountPanel(hostElement, setup) {
     }
   }
 
-  populateSelect(rangeLowSelect, RANGE_BAND_NOTES, setup.rangeLowNote);
-  populateSelect(rangeHighSelect, RANGE_BAND_NOTES, setup.rangeHighNote);
+  sexSelect.value = setup.sex ?? '';
+  populateSelect(rangeLowSelect, bandNotes, setup.rangeLowNote);
+  populateSelect(rangeHighSelect, bandNotes, setup.rangeHighNote);
   populateSelect(targetSelect, notesInRange(setup.rangeLowNote, setup.rangeHighNote), setup.targetNote);
 
   // Averages cover the SPOKEN part of the call only. Folding silence into the
@@ -337,7 +350,8 @@ export function mountPanel(hostElement, setup) {
   // speech — would have no bar to land on and simply vanish from the chart.
   // The saved range still drives the details-view history plot; here, showing
   // everything the detector can hear is the point.
-  const histogram = createDecayingHistogram(RANGE_BAND_NOTES, NOTE_DECAY_HALF_LIFE_MS);
+  let bandNotes = bandNotesFor(setup.sex);
+  let histogram = createDecayingHistogram(bandNotes, NOTE_DECAY_HALF_LIFE_MS);
   const fillByNote = new Map();
   const columnByNote = new Map();
 
@@ -346,14 +360,14 @@ export function mountPanel(hostElement, setup) {
     fillByNote.clear();
     columnByNote.clear();
 
-    RANGE_BAND_NOTES.forEach((note) => {
+    bandNotes.forEach((note) => {
       const column = document.createElement('div');
       column.className = 'note-bar';
       column.innerHTML = `
         <button type="button" class="bar-track" data-play-note="${note}" aria-label="Play ${note}">
           <span class="bar-fill"></span>
         </button>
-        <span class="bar-label" data-accidental="${note.includes('#')}">${note}</span>
+          <span class="bar-label" data-accidental="${note.includes('#')}" data-crowded="${bandNotes.length > 20}">${note}</span>
       `;
       noteBarsEl.appendChild(column);
       fillByNote.set(note, column.querySelector('.bar-fill'));
@@ -449,6 +463,30 @@ export function mountPanel(hostElement, setup) {
 
   const readoutTimer = setInterval(renderReadouts, READOUT_INTERVAL_MS);
 
+  sexSelect.addEventListener('change', async () => {
+    bandNotes = bandNotesFor(sexSelect.value);
+    const pulled = clampRangeToBand(
+      {
+        rangeLowNote: rangeLowSelect.value,
+        rangeHighNote: rangeHighSelect.value,
+        targetNote: targetSelect.value,
+      },
+      sexSelect.value
+    );
+
+    populateSelect(rangeLowSelect, bandNotes, pulled.rangeLowNote);
+    populateSelect(rangeHighSelect, bandNotes, pulled.rangeHighNote);
+    populateSelect(targetSelect, notesInRange(pulled.rangeLowNote, pulled.rangeHighNote), pulled.targetNote);
+
+    buildBars();
+    histogram = createDecayingHistogram(bandNotes, NOTE_DECAY_HALF_LIFE_MS);
+    markTargetZone(pulled.rangeLowNote, pulled.rangeHighNote, pulled.targetNote);
+    rangeLowHz = noteToHz(pulled.rangeLowNote);
+    rangeHighHz = noteToHz(pulled.rangeHighNote);
+
+    if (prefs) await prefs.saveSetup({ ...pulled, sex: sexSelect.value });
+  });
+
   shadow.querySelector('[data-action="save-range"]').addEventListener('click', async () => {
     const lowNote = rangeLowSelect.value;
     const highNote = rangeHighSelect.value;
@@ -468,6 +506,7 @@ export function mountPanel(hostElement, setup) {
       rangeLowNote: lowNote,
       rangeHighNote: highNote,
       targetNote: targetSelect.value,
+      sex: sexSelect.value,
     });
   });
 
@@ -772,7 +811,7 @@ export function mountPanel(hostElement, setup) {
       rangeHighNote: rangeHighSelect.value,
       targetNote: targetSelect.value,
     });
-    recorder = createSessionRecorder(RANGE_BAND_NOTES);
+    recorder = createSessionRecorder(bandNotes);
     if (summary && prefs) await prefs.addSession(summary);
   }
 

@@ -12,12 +12,13 @@ export function createPrefsStore(storage = DEFAULT_STORAGE) {
 
   function getSetup() {
     return new Promise((resolve) => {
-      storage.get(['rangeLowNote', 'rangeHighNote', 'targetNote', 'referenceToneNote'], (result) => {
+      storage.get(['rangeLowNote', 'rangeHighNote', 'targetNote', 'referenceToneNote', 'sex'], (result) => {
         resolve({
           rangeLowNote: result.rangeLowNote ?? null,
           rangeHighNote: result.rangeHighNote ?? null,
           targetNote: result.targetNote ?? null,
           referenceToneNote: result.referenceToneNote ?? null,
+          sex: result.sex ?? '',
         });
       });
     });
@@ -41,12 +42,13 @@ export function createPrefsStore(storage = DEFAULT_STORAGE) {
     });
   }
 
-  function saveSetup({ rangeLowNote, rangeHighNote, targetNote, referenceToneNote }) {
+  function saveSetup({ rangeLowNote, rangeHighNote, targetNote, referenceToneNote, sex }) {
     return set({
       rangeLowNote,
       rangeHighNote,
       targetNote,
       referenceToneNote: referenceToneNote ?? targetNote,
+      sex: sex ?? '',
     });
   }
 

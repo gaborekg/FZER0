@@ -27,6 +27,7 @@ test('getSetup returns nulls when nothing has been saved', async () => {
     rangeHighNote: null,
     targetNote: null,
     referenceToneNote: null,
+    sex: '',
   });
 });
 
@@ -37,6 +38,7 @@ test('saveSetup then getSetup round-trips the saved values', async () => {
     rangeHighNote: 'C3',
     targetNote: 'A2',
     referenceToneNote: 'A2',
+    sex: 'Female',
   });
   const setup = await prefs.getSetup();
   assert.deepEqual(setup, {
@@ -44,6 +46,8 @@ test('saveSetup then getSetup round-trips the saved values', async () => {
     rangeHighNote: 'C3',
     targetNote: 'A2',
     referenceToneNote: 'A2',
+    // Stored here too, because it decides which notes the chart covers.
+    sex: 'Female',
   });
 });
 
