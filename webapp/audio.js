@@ -11,16 +11,18 @@ const CAPTURE_CONSTRAINTS = {
   audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false },
 };
 
-// ONE context for the whole app — capture and the reference tone both use it.
+// One context, reused across recordings. Web Audio here is input only — the
+// worklet analyses the microphone and is never connected to the destination.
 //
-// Desktop happily runs several at once. iOS does not: a second context makes
-// the first stutter, which is why the tone came out broken on a phone while it
-// was clean on a laptop. It also means the tone can never be blocked while the
-// microphone is running, since there is only one thing to unblock.
+// Nothing plays through it: on iOS, Web Audio *output* does not work at all in
+// WKWebView (the diagnostic page proves it — an oscillator is silent while
+// three media-element routes all play), so the reference tone goes through an
+// <audio> element instead. Capture is unaffected, which is why recording has
+// worked throughout.
 let sharedContext = null;
 let workletLoaded = false;
 
-export function getAudioContext() {
+function getAudioContext() {
   if (!sharedContext) sharedContext = new AudioContext();
   return sharedContext;
 }

@@ -10,9 +10,13 @@
 
 export const ASSUMED_TYPICAL_RMS = 0.02;
 
-export const DEFAULT_TONE_GAIN = 0.35;
-export const MIN_TONE_GAIN = 0.15;
-export const MAX_TONE_GAIN = 0.85;
+// Calibrated against what is demonstrably audible on a phone: the diagnostic
+// page plays at 0.5 and is heard clearly, so that is the default rather than a
+// guess. The floor is set so that a mic a quarter as sensitive still lands on
+// half the default rather than being clamped somewhere quieter.
+export const DEFAULT_TONE_GAIN = 0.5;
+export const MIN_TONE_GAIN = 0.25;
+export const MAX_TONE_GAIN = 0.9;
 
 export const DEFAULT_TONE_VOLUME = 1;
 export const MIN_TONE_VOLUME = 0.2;
