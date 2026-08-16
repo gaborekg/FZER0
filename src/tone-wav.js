@@ -31,7 +31,11 @@ function envelopeAt(second, durationSeconds) {
   return 1;
 }
 
-export function buildToneWav({ hz, durationMs = 1200, amplitude = 0.35, sampleRate = 44100 }) {
+// 22 kHz is ample for a sine under 250 Hz and halves the bytes, which matters
+// because the file is carried in a data: URL.
+export const DEFAULT_SAMPLE_RATE = 22050;
+
+export function buildToneWav({ hz, durationMs = 1200, amplitude = 0.35, sampleRate = DEFAULT_SAMPLE_RATE }) {
   if (!(hz > 0)) throw new Error('A tone needs a positive frequency');
 
   const durationSeconds = durationMs / 1000;
@@ -65,4 +69,23 @@ export function buildToneWav({ hz, durationMs = 1200, amplitude = 0.35, sampleRa
   }
 
   return new Uint8Array(buffer);
+}
+
+// A data: URL, not a blob: URL.
+//
+// WKWebView — which is every browser on iOS, Chrome included — frequently
+// refuses to play a media element whose source is a blob: URL. That is the
+// difference between this working on a laptop and being silent on a phone.
+// A data: URL has no such problem.
+export function toneWavDataUri(options) {
+  const bytes = buildToneWav(options);
+
+  // Chunked: String.fromCharCode(...bytes) blows the argument limit on
+  // anything longer than a fraction of a second.
+  let binary = '';
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return `data:audio/wav;base64,${btoa(binary)}`;
 }

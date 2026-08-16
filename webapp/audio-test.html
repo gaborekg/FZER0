@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>FZER0 audio test</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      margin: 0;
+      padding: 1.25rem 1rem 3rem;
+      font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      line-height: 1.5;
+      background: #f0f0f5;
+      color: #16181d;
+      max-width: 34rem;
+      margin-inline: auto;
+    }
+    h1 { font-size: 1.3rem; margin: 0 0 0.3rem; }
+    .lede { margin: 0 0 1.25rem; color: #6c707a; font-size: 0.9rem; }
+    .test {
+      background: #fff;
+      border-radius: 0.9rem;
+      padding: 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+    .test h2 { margin: 0 0 0.15rem; font-size: 1rem; }
+    .test p { margin: 0 0 0.7rem; font-size: 0.82rem; color: #6c707a; }
+    button {
+      display: block;
+      width: 100%;
+      padding: 0.8rem;
+      font: inherit;
+      font-weight: 650;
+      color: #fff;
+      background: #2f6fed;
+      border: 0;
+      border-radius: 0.7rem;
+      cursor: pointer;
+    }
+    .result {
+      margin: 0.6rem 0 0;
+      font-size: 0.82rem;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #16181d;
+      word-break: break-word;
+    }
+    .env {
+      background: #fff;
+      border-radius: 0.9rem;
+      padding: 0.9rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.76rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <h1>Audio test</h1>
+  <p class="lede">
+    Four ways of playing the same 110&nbsp;Hz tone. Tap each one and note which
+    you can hear. Turn the volume up first, and check the silent switch.
+  </p>
+
+  <div class="test">
+    <h2>1 · File on the server</h2>
+    <p>A .wav fetched over HTTPS. No encoding, no blob, no Web Audio.</p>
+    <button data-test="file">Play test 1</button>
+    <p class="result" data-result="file">—</p>
+  </div>
+
+  <div class="test">
+    <h2>2 · Data URL</h2>
+    <p>The same audio, generated here and handed over as a data: URL. This is what the app now uses.</p>
+    <button data-test="data">Play test 2</button>
+    <p class="result" data-result="data">—</p>
+  </div>
+
+  <div class="test">
+    <h2>3 · Blob URL</h2>
+    <p>Identical bytes, delivered as a blob: URL. WKWebView often refuses these.</p>
+    <button data-test="blob">Play test 3</button>
+    <p class="result" data-result="blob">—</p>
+  </div>
+
+  <div class="test">
+    <h2>4 · Web Audio oscillator</h2>
+    <p>No file at all. What the app used before.</p>
+    <button data-test="webaudio">Play test 4</button>
+    <p class="result" data-result="webaudio">—</p>
+  </div>
+
+  <h2 style="font-size:1rem; margin:1.5rem 0 0.5rem;">Environment</h2>
+  <div class="env" data-el="env">…</div>
+
+  <script type="module">
+    import { buildToneWav, toneWavDataUri } from '../src/tone-wav.js';
+
+    const TONE = { hz: 110, durationMs: 1000, amplitude: 0.5 };
+    const say = (name, text) => {
+      document.querySelector(`[data-result="${name}"]`).textContent = text;
+    };
+
+    // Every path reports the same four things, so the difference between them
+    // is the only variable.
+    async function playElement(name, src) {
+      const audio = new Audio(src);
+      audio.setAttribute('playsinline', '');
+      audio.volume = 1;
+
+      audio.addEventListener('ended', () => say(name, 'finished — the browser played it to the end'));
+      audio.addEventListener('error', () =>
+        say(name, `error: media code ${audio.error?.code ?? '?'}`)
+      );
+
+      try {
+        await audio.play();
+        say(name, `playing… duration ${audio.duration || '?'}s, muted ${audio.muted}, volume ${audio.volume}`);
+      } catch (error) {
+        say(name, `refused: ${error.name} — ${error.message}`);
+      }
+    }
+
+    const handlers = {
+      file: () => playElement('file', 'test-tone.wav'),
+      data: () => playElement('data', toneWavDataUri(TONE)),
+      blob: () => {
+        const url = URL.createObjectURL(new Blob([buildToneWav(TONE)], { type: 'audio/wav' }));
+        return playElement('blob', url);
+      },
+      webaudio: async () => {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          await ctx.resume();
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.frequency.value = TONE.hz;
+          gain.gain.value = TONE.amplitude;
+          oscillator.connect(gain);
+          gain.connect(ctx.destination);
+          oscillator.start();
+          oscillator.stop(ctx.currentTime + 1);
+          say('webaudio', `context ${ctx.state}, sample rate ${ctx.sampleRate}`);
+          oscillator.onended = () => say('webaudio', `finished — context was ${ctx.state}`);
+        } catch (error) {
+          say('webaudio', `failed: ${error.name} — ${error.message}`);
+        }
+      },
+    };
+
+    document.querySelectorAll('[data-test]').forEach((button) => {
+      button.addEventListener('click', () => handlers[button.dataset.test]());
+    });
+
+    document.querySelector('[data-el="env"]').textContent = [
+      navigator.userAgent,
+      `AudioContext: ${typeof window.AudioContext !== 'undefined' ? 'yes' : 'no'}`,
+      `webkitAudioContext: ${typeof window.webkitAudioContext !== 'undefined' ? 'yes' : 'no'}`,
+      `audioSession: ${navigator.audioSession ? navigator.audioSession.type : 'not supported'}`,
+      `can play wav: "${new Audio().canPlayType('audio/wav')}"`,
+      `standalone: ${window.navigator.standalone ?? 'n/a'}`,
+    ].join('\n');
+  </script>
+</body>
+</html>

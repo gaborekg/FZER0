@@ -1,5 +1,5 @@
 import { noteToHz } from './note-hz.js';
-import { buildToneWav } from './tone-wav.js';
+import { toneWavDataUri } from './tone-wav.js';
 
 const DEFAULT_TONE_GAIN = 0.35;
 
@@ -28,8 +28,7 @@ export function createTonePlayer(createAudioElement = (src) => new Audio(src)) {
   function sourceFor(note, durationMs, gain) {
     const key = `${note}|${durationMs}|${gain.toFixed(3)}`;
     if (!cache.has(key)) {
-      const wav = buildToneWav({ hz: noteToHz(note), durationMs, amplitude: gain });
-      cache.set(key, URL.createObjectURL(new Blob([wav], { type: 'audio/wav' })));
+      cache.set(key, toneWavDataUri({ hz: noteToHz(note), durationMs, amplitude: gain }));
     }
     return cache.get(key);
   }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildToneWav } from '../src/tone-wav.js';
+import { buildToneWav, toneWavDataUri } from '../src/tone-wav.js';
 
 const SAMPLE_RATE = 8000;
 
@@ -89,4 +89,24 @@ test('amplitude is clamped rather than allowed to wrap round', () => {
 
 test('a frequency of zero is refused rather than producing silence', () => {
   assert.throws(() => buildToneWav({ hz: 0 }), /positive frequency/);
+});
+
+test('the data URL carries the same bytes the encoder produced', () => {
+  // The blob: URL it replaced is the thing WKWebView refuses to play, so this
+  // path has to be exactly as correct as the raw encoder.
+  const options = { hz: 110, durationMs: 120, amplitude: 0.5, sampleRate: 8000 };
+  const uri = toneWavDataUri(options);
+
+  assert.match(uri, /^data:audio\/wav;base64,/);
+
+  const decoded = Buffer.from(uri.split(',')[1], 'base64');
+  assert.deepEqual(new Uint8Array(decoded), buildToneWav(options));
+});
+
+test('a tone long enough to blow the argument limit still encodes', () => {
+  // String.fromCharCode(...bytes) throws somewhere above 100k arguments, which
+  // a second of audio comfortably exceeds.
+  const uri = toneWavDataUri({ hz: 110, durationMs: 3000, sampleRate: 44100 });
+  const decoded = Buffer.from(uri.split(',')[1], 'base64');
+  assert.equal(decoded.length, 44 + 44100 * 3 * 2);
 });
