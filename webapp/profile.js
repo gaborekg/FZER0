@@ -3,7 +3,7 @@ import { computeCeilingFromSamples, computeTypicalFromSamples } from '../src/vol
 import { importSettings } from '../src/settings-transfer.js';
 import { createTonePlayer } from '../src/tone-player.js';
 import { toneGainFor } from '../src/tone-gain.js';
-import { getAudioContext, startCapture } from './audio.js';
+import { startCapture } from './audio.js';
 
 const CALIBRATION_MS = 5000;
 
@@ -44,9 +44,7 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
     ])
   );
   const toneVolumeValueEl = root.querySelector('[data-el="tone-volume-value"]');
-  // Shares the app's one audio context, so previewing here cannot start a
-  // second graph competing with the microphone.
-  const tonePlayer = createTonePlayer(getAudioContext);
+  const tonePlayer = createTonePlayer();
   const statusEl = root.querySelector('[data-el="calibration-status"]');
   const levelFill = root.querySelector('[data-el="level-fill"]');
   const calibrateButton = root.querySelector('[data-action="start-calibration"]');
@@ -122,9 +120,9 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
     setTimeout(() => {
       const state = tonePlayer.state();
       statusEl.textContent =
-        state === 'running'
-          ? `Played ${note} at ${Math.round(gain * 100)}%. If you heard nothing, check the silent switch on the side of the phone.`
-          : `The browser is blocking audio on this page (${state}).`;
+        state === 'error'
+          ? 'The browser refused to play the tone.'
+          : `Played ${note} at ${Math.round(gain * 100)}%. If you heard nothing, turn the phone's volume up — the tone follows the system volume, not this slider alone.`;
     }, 500);
   });
 
