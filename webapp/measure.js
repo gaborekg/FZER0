@@ -331,7 +331,21 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
       setStatus('Set your target note in Profile first.');
       return;
     }
+
     playNote(note);
+    setStatus(`Playing ${note}…`);
+
+    // Resuming is asynchronous, so the state right after the tap means nothing.
+    // A moment later it does: anything other than "running" and the browser is
+    // not making a sound, which is worth saying rather than leaving the user
+    // tapping a button that appears to do nothing.
+    setTimeout(() => {
+      const state = tonePlayer.state();
+      if (state === 'running') return;
+      setStatus(
+        `The browser is not letting this page play audio (${state}). On iPhone, check the silent switch on the side.`
+      );
+    }, 400);
   });
 
   // Coming back to the tab is the moment to find out whether it kept working.

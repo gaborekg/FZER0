@@ -5,17 +5,10 @@ import { createProfileScreen } from './profile.js';
 
 const TITLES = { measure: 'FZER0', history: 'History', profile: 'Profile' };
 
-// Safari routes Web Audio through the "ambient" session by default, which the
-// hardware silent switch mutes — so a phone on silent plays no tone at all and
-// looks broken. This app both listens and plays, so it asks for the session
-// type that covers both. Guarded: it only exists in recent Safari.
-if (navigator.audioSession) {
-  try {
-    navigator.audioSession.type = 'play-and-record';
-  } catch {
-    // Not fatal — the tone just stays subject to the silent switch.
-  }
-}
+// Deliberately NOT setting navigator.audioSession.type here. 'play-and-record'
+// makes iOS route output to the earpiece at call volume, the way a phone call
+// does — which is quieter than no fix at all. Safari's default 'auto' picks the
+// right session for whether we are playing, recording, or both.
 
 const store = createAppStore(window.localStorage);
 

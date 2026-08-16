@@ -6,32 +6,60 @@ const DEFAULT_TONE_GAIN = 0.2;
 // `onended` and run the caller's callback anyway.
 const FINISH_GRACE_MS = 300;
 
+// Schedule the tone a moment ahead rather than at "now". A context that was
+// suspended has a frozen clock, and WebKit drops notes whose start time has
+// already passed by the time it actually resumes.
+const START_LEAD_SECONDS = 0.05;
+
 export function createTonePlayer(audioContextFactory = () => new AudioContext()) {
   let audioContext = null;
+  let unlocked = false;
+
+  function context() {
+    if (!audioContext) audioContext = audioContextFactory();
+    return audioContext;
+  }
+
+  // Safari will not let a context make sound until it has been resumed inside
+  // a user gesture *and* has rendered something. A one-sample silent buffer is
+  // the established way to satisfy the second half without a click or a pop.
+  // Called from inside the tap that asked for the tone, which is the only
+  // moment iOS accepts it.
+  function unlock(ctx) {
+    if (unlocked) return;
+    unlocked = true;
+    if (typeof ctx.createBuffer !== 'function') return;
+    try {
+      const source = ctx.createBufferSource();
+      source.buffer = ctx.createBuffer(1, 1, ctx.sampleRate || 44100);
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch {
+      // Older engines refuse a zero-length buffer; nothing depends on this.
+    }
+  }
 
   function play(note, { durationMs = 1200, gain = DEFAULT_TONE_GAIN, onStart, onEnd } = {}) {
-    if (!audioContext) {
-      audioContext = audioContextFactory();
-    }
+    const ctx = context();
 
-    // Safari hands back a suspended context, and suspends it again every time
-    // the page goes to the background. start() on a suspended context makes no
-    // sound at all — this is why the tone was silent on iPhone. Resume is
-    // deliberately not awaited: it has to be called inside the user gesture
-    // that got us here, and awaiting would push the rest of this out of it.
-    // currentTime does not advance while suspended, so the stop time below is
-    // still the right distance away once it does resume.
-    audioContext.resume?.();
+    // Not awaited on purpose: resume has to happen inside the user gesture that
+    // got us here, and awaiting would push everything after it out of that
+    // gesture, which is exactly what Safari refuses.
+    ctx.resume?.();
+    unlock(ctx);
 
-    const oscillator = audioContext.createOscillator();
+    const oscillator = ctx.createOscillator();
     oscillator.frequency.value = noteToHz(note);
-    const gainNode = audioContext.createGain();
+    const gainNode = ctx.createGain();
     gainNode.gain.value = gain;
     oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    gainNode.connect(ctx.destination);
+
     if (onStart) onStart();
-    oscillator.start();
-    oscillator.stop(audioContext.currentTime + durationMs / 1000);
+
+    const startAt = (ctx.currentTime ?? 0) + START_LEAD_SECONDS;
+    oscillator.start(startAt);
+    oscillator.stop(startAt + durationMs / 1000);
 
     // Callers pause their analysis for the length of the tone and rely on this
     // to start again. `onended` never fires if the context stays suspended, so
@@ -47,5 +75,12 @@ export function createTonePlayer(audioContextFactory = () => new AudioContext())
     setTimeout(finish, durationMs + FINISH_GRACE_MS);
   }
 
-  return { play };
+  // 'running' means the browser is actually playing. Anything else and the
+  // user hears nothing, which is worth saying out loud rather than leaving
+  // them to wonder whether the tone is just quiet.
+  function state() {
+    return audioContext?.state ?? 'new';
+  }
+
+  return { play, state };
 }
