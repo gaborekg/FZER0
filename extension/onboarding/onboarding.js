@@ -89,7 +89,7 @@ populateSelect(highSelect, SETUP_NOTES);
 // Default the high end to the LAST band note (not the first, which is what
 // populateSelect leaves selected by default) so an untouched submit already
 // has a valid, non-zero-width range. Without this, an untouched form saves
-// rangeLowNote === rangeHighNote === RANGE_BAND_NOTES[0], which passes
+// rangeLowNote === rangeHighNote === the band's first note, which passes
 // notesInRange (it returns a valid single-element array, no throw) and
 // breaks the in-call panel's gaugePosition math (divides by
 // rangeHighHz - rangeLowHz, which is zero). Set before the initial
