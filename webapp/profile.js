@@ -3,7 +3,7 @@ import { computeCeilingFromSamples, computeTypicalFromSamples } from '../src/vol
 import { importSettings } from '../src/settings-transfer.js';
 import { createTonePlayer } from '../src/tone-player.js';
 import { toneGainFor } from '../src/tone-gain.js';
-import { startCapture } from './audio.js';
+import { setAudioSession, startCapture } from './audio.js';
 
 const CALIBRATION_MS = 5000;
 
@@ -110,6 +110,9 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
       return;
     }
     // Straight from the slider, so you hear the change before it is saved.
+    // iOS routes to the earpiece while the session is in record mode, which is
+    // where this tone was going. Ask for the loudspeaker first.
+    setAudioSession('playback');
     const gain = toneGainFor({ ...profile, toneVolume: Number(inputs.toneVolume.value) });
     tonePlayer.play(note, { gain });
 
@@ -122,7 +125,7 @@ export function createProfileScreen(root, { store, onProfileChanged, isRecording
       statusEl.textContent =
         state === 'error'
           ? 'The browser refused to play the tone.'
-          : `Played ${note} at ${Math.round(gain * 100)}%. If you heard nothing, turn the phone's volume up — the tone follows the system volume, not this slider alone.`;
+          : `Played ${note} at ${Math.round(gain * 100)}%.`;
     }, 500);
   });
 

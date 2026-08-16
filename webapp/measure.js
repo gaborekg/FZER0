@@ -5,10 +5,10 @@ import { classifyFrame } from '../src/gate.js';
 import { createDecayingHistogram, createRunningMean } from '../src/stats.js';
 import { createSessionRecorder } from '../src/session-recorder.js';
 import { createTonePlayer } from '../src/tone-player.js';
-import { toneGainFor, ASSUMED_TYPICAL_RMS } from '../src/tone-gain.js';
+import { toneGainFor } from '../src/tone-gain.js';
 import { buildDbMeterSvg, dbFromLevel } from '../src/db-meter.js';
-import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS } from '../src/config.js';
-import { startCapture } from './audio.js';
+import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS, ASSUMED_TYPICAL_RMS } from '../src/config.js';
+import { setAudioSession, startCapture } from './audio.js';
 
 const READOUT_INTERVAL_MS = 250;
 const NOTE_DECAY_HALF_LIFE_MS = 10_000;
@@ -300,6 +300,9 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
   });
 
   function playNote(note) {
+    // Only when nothing is being recorded: asking for 'playback' mid-recording
+    // would take the microphone away.
+    if (!capture) setAudioSession('playback');
     tonePlayer.play(note, {
       gain: toneGainFor(profile),
       onStart: () => {

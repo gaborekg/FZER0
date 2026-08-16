@@ -92,6 +92,17 @@
     <p class="result" data-result="webaudio">—</p>
   </div>
 
+  <div class="test">
+    <h2>5 · Speaker routing</h2>
+    <p>
+      Opens the microphone for two seconds, then plays the tone — first as-is,
+      then after asking iOS for the loudspeaker. If the first is faint and
+      coming from the earpiece and the second is not, routing was the problem.
+    </p>
+    <button data-test="routing">Play test 5</button>
+    <p class="result" data-result="routing">—</p>
+  </div>
+
   <h2 style="font-size:1rem; margin:1.5rem 0 0.5rem;">Environment</h2>
   <div class="env" data-el="env">…</div>
 
@@ -149,6 +160,46 @@
         }
       },
     };
+
+    handlers.routing = async () => {
+      const setSession = (type) => {
+        if (!navigator.audioSession) return 'unsupported';
+        try {
+          navigator.audioSession.type = type;
+          return navigator.audioSession.type;
+        } catch (error) {
+          return `failed: ${error.name}`;
+        }
+      };
+
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch (error) {
+        say('routing', `microphone refused: ${error.name}`);
+        return;
+      }
+
+      say('routing', `mic open, session "${setSession('play-and-record')}" — playing (listen: earpiece?)`);
+      await playQuietly();
+
+      const after = setSession('playback');
+      stream.getTracks().forEach((track) => track.stop());
+      say('routing', `mic closed, session "${after}" — playing again (listen: speaker?)`);
+      await new Promise((resolve) => setTimeout(resolve, 1400));
+      await playQuietly();
+    };
+
+    async function playQuietly() {
+      const audio = new Audio(toneWavDataUri(TONE));
+      audio.setAttribute('playsinline', '');
+      try {
+        await audio.play();
+      } catch {
+        // Reported by the caller's status line.
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1400));
+    }
 
     document.querySelectorAll('[data-test]').forEach((button) => {
       button.addEventListener('click', () => handlers[button.dataset.test]());

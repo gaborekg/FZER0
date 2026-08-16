@@ -1,7 +1,6 @@
 import { noteToHz } from './note-hz.js';
 import { toneWavDataUri } from './tone-wav.js';
-
-const DEFAULT_TONE_GAIN = 0.35;
+import { BASE_TONE_GAIN } from './tone-gain.js';
 
 // How long after the tone should have finished to give up waiting for the
 // `ended` event and run the caller's callback anyway.
@@ -33,7 +32,7 @@ export function createTonePlayer(createAudioElement = (src) => new Audio(src)) {
     return cache.get(key);
   }
 
-  function play(note, { durationMs = 1200, gain = DEFAULT_TONE_GAIN, onStart, onEnd } = {}) {
+  function play(note, { durationMs = 1200, gain = BASE_TONE_GAIN, onStart, onEnd } = {}) {
     // Tapping a second note should replace the first, not layer on top of it.
     current?.pause?.();
 

@@ -1,38 +1,28 @@
 // How loud the reference tone plays.
 //
-// The aim is that matching the tone never means pushing your voice, so it is
-// anchored to how loudly you actually speak. But microphone level and playback
-// amplitude are not the same scale: a phone with an insensitive microphone
-// reports a small RMS for a perfectly normal voice, and scaling the tone
-// straight off that made it almost inaudible. So the calibration only nudges
-// the level, and the user gets a control for the part no browser can know —
-// how loud their headphones are turned up.
+// This used to be derived from the microphone: measure how loudly you speak,
+// play the tone at "the same" level, so matching it never means pushing your
+// voice. Good intention, wrong mechanism. Microphone RMS and playback
+// amplitude are unrelated scales — mic sensitivity varies by an order of
+// magnitude between a laptop and a phone for the same voice — so the tone came
+// out inaudible on the device where it mattered most, twice.
+//
+// What is left is honest: a loud, fixed default, and a control for the part no
+// browser can measure — how far up the headphones are turned. The microphone
+// calibration still sets the Target mark on the dial, which is a level on the
+// same scale as the reading and so a comparison that actually holds.
 
-export const ASSUMED_TYPICAL_RMS = 0.02;
-
-// Calibrated against what is demonstrably audible on a phone: the diagnostic
-// page plays at 0.5 and is heard clearly, so that is the default rather than a
-// guess. The floor is set so that a mic a quarter as sensitive still lands on
-// half the default rather than being clamped somewhere quieter.
-export const DEFAULT_TONE_GAIN = 0.5;
-export const MIN_TONE_GAIN = 0.25;
-export const MAX_TONE_GAIN = 0.9;
+export const BASE_TONE_GAIN = 0.7;
 
 export const DEFAULT_TONE_VOLUME = 1;
 export const MIN_TONE_VOLUME = 0.2;
-export const MAX_TONE_VOLUME = 2;
+export const MAX_TONE_VOLUME = 1.4;
 
 const clamp = (value, low, high) => Math.max(low, Math.min(high, value));
 
-export function toneGainFor({ typicalRms = null, toneVolume = DEFAULT_TONE_VOLUME } = {}) {
-  // Square root, not the raw ratio. A microphone half as sensitive should make
-  // the tone a little quieter, not half as loud — the difference between the
-  // two is most of why this bottomed out.
-  const sensitivity = typicalRms > 0 ? Math.sqrt(typicalRms / ASSUMED_TYPICAL_RMS) : 1;
-  const calibrated = clamp(DEFAULT_TONE_GAIN * sensitivity, MIN_TONE_GAIN, MAX_TONE_GAIN);
-
-  // The user's own multiplier sits outside those bounds: if they want it barely
-  // there, that is their call and not something to override.
+export function toneGainFor({ toneVolume = DEFAULT_TONE_VOLUME } = {}) {
   const volume = clamp(Number(toneVolume) || DEFAULT_TONE_VOLUME, MIN_TONE_VOLUME, MAX_TONE_VOLUME);
-  return clamp(calibrated * volume, 0, 1);
+  // Never past 1: beyond full scale the samples clip and the tone buzzes
+  // rather than getting louder.
+  return clamp(BASE_TONE_GAIN * volume, 0, 1);
 }

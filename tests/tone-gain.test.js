@@ -2,66 +2,54 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   toneGainFor,
-  ASSUMED_TYPICAL_RMS,
-  DEFAULT_TONE_GAIN,
-  MIN_TONE_GAIN,
-  MAX_TONE_GAIN,
+  BASE_TONE_GAIN,
+  MIN_TONE_VOLUME,
+  MAX_TONE_VOLUME,
 } from '../src/tone-gain.js';
 
-test('an uncalibrated tone plays at the default level', () => {
-  assert.equal(toneGainFor(), DEFAULT_TONE_GAIN);
-  assert.equal(toneGainFor({ typicalRms: null }), DEFAULT_TONE_GAIN);
+test('the tone plays loud by default', () => {
+  // It was quiet on a phone twice. The default has to be audible before any
+  // adjustment, not after one.
+  assert.equal(toneGainFor(), BASE_TONE_GAIN);
+  assert.ok(BASE_TONE_GAIN >= 0.5, 'at least as loud as the level proven audible on device');
 });
 
-test('a voice at the assumed level lands exactly on the default', () => {
-  assert.ok(Math.abs(toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS }) - DEFAULT_TONE_GAIN) < 1e-9);
+test('the microphone no longer has any say in it', () => {
+  // The old mapping scaled gain off measured speaking level, which is a
+  // different scale entirely and made the tone inaudible on quiet mics.
+  assert.equal(toneGainFor({ typicalRms: 0.0001 }), BASE_TONE_GAIN);
+  assert.equal(toneGainFor({ typicalRms: 5 }), BASE_TONE_GAIN);
 });
 
-test('an insensitive microphone lowers the tone gently, not proportionally', () => {
-  // The bug this exists to prevent: a quarter of the input level used to mean
-  // a quarter of the output, which pinned the tone at the floor and made it
-  // inaudible on a phone.
-  const quarter = toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS / 4 });
-
-  assert.ok(quarter > DEFAULT_TONE_GAIN / 4, 'not scaled straight down');
-  assert.ok(Math.abs(quarter - DEFAULT_TONE_GAIN / 2) < 1e-9, 'square root of the ratio');
-  assert.ok(quarter >= MIN_TONE_GAIN);
+test('the volume control scales the default', () => {
+  assert.ok(Math.abs(toneGainFor({ toneVolume: 0.5 }) - BASE_TONE_GAIN * 0.5) < 1e-9);
+  assert.ok(toneGainFor({ toneVolume: MAX_TONE_VOLUME }) > BASE_TONE_GAIN);
 });
 
-test('calibration alone can never take the tone below the floor or over the ceiling', () => {
-  assert.equal(toneGainFor({ typicalRms: 0.00001 }), MIN_TONE_GAIN);
-  assert.equal(toneGainFor({ typicalRms: 5 }), MAX_TONE_GAIN);
+test('it never goes past full scale, where samples would clip', () => {
+  assert.ok(toneGainFor({ toneVolume: 99 }) <= 1);
+  assert.ok(toneGainFor({ toneVolume: MAX_TONE_VOLUME }) <= 1);
 });
 
-test('the volume control multiplies what calibration decided', () => {
-  const base = toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS });
-  assert.ok(Math.abs(toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS, toneVolume: 2 }) - base * 2) < 1e-9);
+test('the quietest setting is quiet but not silent', () => {
+  const quietest = toneGainFor({ toneVolume: MIN_TONE_VOLUME });
+  assert.ok(quietest > 0);
+  assert.ok(quietest < BASE_TONE_GAIN);
 });
 
-test('turning the volume right down goes below the calibration floor', () => {
-  // The floor protects against a bad calibration, not against the user
-  // deciding they want the tone barely there.
-  const quiet = toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS, toneVolume: 0.2 });
-  assert.ok(quiet < MIN_TONE_GAIN, `expected below ${MIN_TONE_GAIN}, got ${quiet}`);
-  assert.ok(quiet > 0);
+test('a nonsense volume falls back to normal rather than to silence', () => {
+  assert.equal(toneGainFor({ toneVolume: undefined }), BASE_TONE_GAIN);
+  assert.equal(toneGainFor({ toneVolume: null }), BASE_TONE_GAIN);
+  assert.equal(toneGainFor({ toneVolume: 'loud' }), BASE_TONE_GAIN);
+  assert.equal(toneGainFor({ toneVolume: 0 }), BASE_TONE_GAIN);
 });
 
-test('the volume control is bounded, and nonsense falls back to normal', () => {
-  const loudest = toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS, toneVolume: 99 });
-  assert.ok(loudest <= 1, 'never clips');
+test('the default beats every level the old mapping could produce', () => {
+  // That mapping topped out at 0.35 and fell to 0.15 on a quiet microphone,
+  // which is how the tone ended up inaudible on a phone.
+  const OLD_BEST = 0.35;
+  assert.ok(toneGainFor() > OLD_BEST, `${toneGainFor()} should beat ${OLD_BEST}`);
 
-  const base = toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS });
-  assert.equal(toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS, toneVolume: undefined }), base);
-  assert.equal(toneGainFor({ typicalRms: ASSUMED_TYPICAL_RMS, toneVolume: 'loud' }), base);
-});
-
-test('the tone is louder than it used to be at every calibration', () => {
-  // The old mapping: 0.2 * ratio, floored at 0.05.
-  const oldGain = (rms) => Math.max(0.05, Math.min(0.6, 0.2 * (rms / ASSUMED_TYPICAL_RMS)));
-  for (const rms of [0.002, 0.005, 0.01, 0.02, 0.04]) {
-    assert.ok(
-      toneGainFor({ typicalRms: rms }) > oldGain(rms),
-      `at rms ${rms}: ${toneGainFor({ typicalRms: rms })} should beat ${oldGain(rms)}`
-    );
-  }
+  // Turning it down below that is fine — it is a choice, not a miscalculation.
+  assert.ok(toneGainFor({ toneVolume: MIN_TONE_VOLUME }) < OLD_BEST);
 });

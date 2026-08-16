@@ -11,34 +11,44 @@ const CAPTURE_CONSTRAINTS = {
   audio: { echoCancellation: false, autoGainControl: false, noiseSuppression: false },
 };
 
-// One context, reused across recordings. Web Audio here is input only — the
-// worklet analyses the microphone and is never connected to the destination.
+// Web Audio here is input only — the worklet analyses the microphone and is
+// never connected to the destination. Nothing plays through it: on iOS, Web
+// Audio *output* does not work in WKWebView at all, so the reference tone goes
+// through an <audio> element instead.
 //
-// Nothing plays through it: on iOS, Web Audio *output* does not work at all in
-// WKWebView (the diagnostic page proves it — an oscillator is silent while
-// three media-element routes all play), so the reference tone goes through an
-// <audio> element instead. Capture is unaffected, which is why recording has
-// worked throughout.
-let sharedContext = null;
+// The context is created per recording and CLOSED when the recording stops.
+// That matters more than it looks: while a capture graph is alive, iOS holds
+// the audio session in record mode, and in record mode it routes playback to
+// the earpiece rather than the speaker. Keeping one context alive between
+// recordings — which seemed tidier — left every tone afterwards playing out of
+// the receiver at call volume.
 let workletLoaded = false;
+let liveContexts = 0;
 
-function getAudioContext() {
-  if (!sharedContext) sharedContext = new AudioContext();
-  return sharedContext;
+// iOS decides where sound comes out from the session type. 'playback' is the
+// loudspeaker; 'play-and-record' is the earpiece, because that is what a phone
+// call wants. So it is set to match what the app is actually doing, and put
+// back the moment recording ends. Only recent WebKit has this, hence the guard.
+export function setAudioSession(type) {
+  if (!navigator.audioSession) return;
+  try {
+    navigator.audioSession.type = type;
+  } catch {
+    // Older engine; routing stays the browser's decision.
+  }
 }
 
 export async function startCapture(onFrame) {
+  setAudioSession('play-and-record');
   const stream = await navigator.mediaDevices.getUserMedia(CAPTURE_CONSTRAINTS);
-  const audioContext = getAudioContext();
+  const audioContext = new AudioContext();
+  liveContexts += 1;
 
   let workletNode;
   let source;
   try {
-    // addModule is per context, and the context outlives any one recording.
-    if (!workletLoaded) {
-      await audioContext.audioWorklet.addModule(WORKLET_URL);
-      workletLoaded = true;
-    }
+    await audioContext.audioWorklet.addModule(WORKLET_URL);
+    workletLoaded = true;
     await audioContext.resume();
 
     workletNode = new AudioWorkletNode(audioContext, 'fzer0-f0-processor');
@@ -47,6 +57,9 @@ export async function startCapture(onFrame) {
     source.connect(workletNode);
   } catch (error) {
     stream.getTracks().forEach((track) => track.stop());
+    liveContexts -= 1;
+    await audioContext.close();
+    setAudioSession('playback');
     throw error;
   }
 
@@ -62,8 +75,13 @@ export async function startCapture(onFrame) {
       source.disconnect();
       workletNode.disconnect();
       stream.getTracks().forEach((track) => track.stop());
-      // The context is deliberately left open: closing it would take the tone
-      // player down with it, and re-creating one costs another iOS unlock.
+
+      // Both of these are what hands the speaker back. Stopping the tracks
+      // alone is not enough — the live context keeps the session in record
+      // mode, and the tone keeps coming out of the earpiece.
+      liveContexts -= 1;
+      await audioContext.close();
+      if (liveContexts === 0) setAudioSession('playback');
     },
   };
 }

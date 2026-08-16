@@ -13,14 +13,10 @@ import {
 } from '../../src/stats.js';
 import { dbFromLevel, buildDbMeterSvg } from '../../src/db-meter.js';
 import { computeCeilingFromSamples, computeTypicalFromSamples } from '../../src/volume-calibration.js';
-import {
-  toneGainFor,
-  ASSUMED_TYPICAL_RMS,
-  DEFAULT_TONE_VOLUME,
-} from '../../src/tone-gain.js';
+import { toneGainFor, DEFAULT_TONE_VOLUME } from '../../src/tone-gain.js';
 import { createPrefsStore } from '../../src/prefs.js';
 import { exportSettings } from '../../src/settings-transfer.js';
-import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS } from '../../src/config.js';
+import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS, ASSUMED_TYPICAL_RMS } from '../../src/config.js';
 
 const PANEL_HTML = `
   <div class="panel" data-el="panel">
@@ -166,7 +162,7 @@ const PANEL_HTML = `
       <h3 class="sub-title">Tone volume</h3>
       <p class="hint">No browser can tell how loud your headphones are, so this part is yours.</p>
       <div class="slider-row">
-        <input class="slider" type="range" min="0.2" max="2" step="0.05"
+        <input class="slider" type="range" min="0.2" max="1.4" step="0.05"
                data-field="toneVolume" aria-label="Tone volume" />
         <span class="slider-value" data-el="tone-volume-value">100%</span>
       </div>
@@ -481,7 +477,7 @@ export function mountPanel(hostElement, setup) {
   function applyCalibration(ceilingRms, measuredTypicalRms) {
     volumeCeilingRms = ceilingRms;
     typicalRms = measuredTypicalRms;
-    toneGain = toneGainFor({ typicalRms, toneVolume });
+    toneGain = toneGainFor({ toneVolume });
   }
 
   // Sitting through the five-second calibration once per call is the kind of
@@ -634,7 +630,7 @@ export function mountPanel(hostElement, setup) {
   toneVolumeInput.addEventListener('input', showToneVolume);
   toneVolumeInput.addEventListener('change', async () => {
     toneVolume = Number(toneVolumeInput.value);
-    toneGain = toneGainFor({ typicalRms, toneVolume });
+    toneGain = toneGainFor({ toneVolume });
     if (prefs) await prefs.saveCalibration({ volumeCeilingRms, typicalRms, toneVolume });
   });
 

@@ -4,6 +4,12 @@ export const FLOOR_MIN_RMS = 0.0005;
 export const FLOOR_MAX_RMS = 0.05;
 export const NOISE_FLOOR_WINDOW_SECONDS = 20;
 export const VOLUME_CEILING_RMS = 0.05;
+
+// The speaking level assumed before anyone has calibrated. Used to place the
+// Target mark on the dial — a level compared against other levels, which is a
+// comparison that holds. It used to set the reference tone's loudness too;
+// that was a different scale entirely and made the tone inaudible on a phone.
+export const ASSUMED_TYPICAL_RMS = 0.02;
 export const TONE_RESUME_DELAY_MS = 400;
 export const FRAME_SIZE = 2048;
 
