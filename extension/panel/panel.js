@@ -148,7 +148,7 @@ const PANEL_HTML = `
         <span>Target note</span>
         <select data-field="targetNote"></select>
       </label>
-      <button class="wide-button" data-action="save-range">Save</button>
+      <button class="wide-button primary" data-action="save-range">Save</button>
     </div>
 
     <div class="card">

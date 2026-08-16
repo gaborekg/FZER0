@@ -1,3 +1,5 @@
+@import url('../../src/design-tokens.css');
+
 :host {
   all: initial;
 }
@@ -47,10 +49,10 @@
   container-type: inline-size;
   container-name: face;
   padding: 0.75rem;
-  background: #f6f5fa;
-  color: #2b2b2b;
+  background: var(--ground);
+  color: var(--ink);
   font-size: 0.85rem;
-  border-radius: 0.9rem;
+  border-radius: var(--radius-card);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
@@ -70,10 +72,10 @@
      so a contained `.mini` contributes nothing to that fit and the ribbon
      collapses to a sliver. `.face` can be a container because it states an
      explicit width; this one cannot. */
-  background: #f6f5fa;
-  color: #2b2b2b;
+  background: var(--ground);
+  color: var(--ink);
   font-size: 0.85rem;
-  border-radius: 0.9rem;
+  border-radius: var(--radius-card);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
@@ -160,8 +162,8 @@
 }
 
 .card {
-  background: #ffffff;
-  border-radius: 0.75rem;
+  background: var(--card);
+  border-radius: var(--radius-card);
   padding: 0.6rem;
 }
 
@@ -195,8 +197,8 @@
 .stat {
   width: clamp(4.2rem, 22cqi, 5.6rem);
   min-height: 3.6rem;
-  background: #eeedf1;
-  border-radius: 0.6rem;
+  background: var(--field);
+  border-radius: var(--radius-inner);
   padding: 0.4rem 0.5rem 0.5rem;
   display: flex;
   flex-direction: column;
@@ -212,7 +214,8 @@
    1% of the face's width, so 5.2cqi lands on 1.35rem at the full 26rem. */
 .stat-value {
   font-size: clamp(0.95rem, 5.2cqi, 1.35rem);
-  font-weight: 400;
+  font-weight: 500;
+  color: var(--accent);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -229,7 +232,7 @@
 
 .row-label {
   font-size: clamp(0.6875rem, 2.2cqi, 0.7rem);
-  color: #6d6b74;
+  color: var(--ink-2);
 }
 
 .row-value {
@@ -291,7 +294,7 @@
      the two halves of the card always line up. */
   flex: 1;
   min-height: 3rem;
-  background: #d8d7dd;
+  background: var(--bar-track);
   border-radius: 0.35rem;
   display: flex;
   align-items: flex-end;
@@ -303,14 +306,14 @@
    reports where the voice went, it does not grade it. */
 .stat-zone,
 .stat-target {
-  background: #e2efe7;
+  background: var(--accent-soft);
 }
 
 .stat-zone .stat-label,
 .stat-zone .stat-value,
 .stat-target .stat-label,
 .stat-target .stat-value {
-  color: #2b6b4a;
+  color: var(--accent);
 }
 
 /* Now that every box is the height of the tallest, spreading label and value
@@ -327,19 +330,19 @@
    into the empty part of the track, behind the bar — tinting the bar itself
    would collide with reading its height. */
 .note-bar.in-zone .bar-track {
-  background: #cfe3d6;
+  background: var(--accent-tint);
 }
 
 .note-bar.in-zone .bar-label {
-  color: #2b6b4a;
+  color: var(--accent);
 }
 
 .note-bar.is-target .bar-track {
-  box-shadow: inset 0 0 0 1.5px #2b6b4a;
+  box-shadow: inset 0 0 0 1.5px var(--accent);
 }
 
 .note-bar.is-target .bar-label {
-  color: #1c4a33;
+  color: var(--accent-strong);
   text-decoration: underline;
   /* The target is a single bar among 22 — it has to survive the label hiding
      that kicks in on a narrow panel. */
@@ -351,20 +354,20 @@
    pressable — otherwise "play the tone whether or not I'm talking" is a
    feature with no visible way in. */
 .bar-track:hover {
-  background: #c4c3ca;
-  box-shadow: inset 0 0 0 1.5px #8b8a92;
+  background: var(--bar-track-strong);
+  box-shadow: inset 0 0 0 1.5px var(--ink-2);
 }
 
 .bar-track:active .bar-fill,
 .bar-track:hover .bar-fill {
-  background: #1f6feb;
+  background: var(--accent);
 }
 
 .bar-fill {
   display: block;
   width: 100%;
   height: 0;
-  background: #454242;
+  background: var(--bar-fill);
   border-radius: 0.35rem;
   /* Shorter than the 250 ms readout tick, so a bar settles between updates
      instead of living permanently mid-animation. */
@@ -439,8 +442,8 @@
 .icon-button {
   all: unset;
   cursor: pointer;
-  background: #ffffff;
-  border: 1px solid #d3d2d8;
+  background: var(--card);
+  border: 1px solid var(--line);
   border-radius: 0.35rem;
   padding: 0 0.45rem;
   line-height: 1.2rem;
@@ -449,7 +452,7 @@
 }
 
 .icon-button:hover {
-  background: #e6e5eb;
+  background: var(--field-strong);
 }
 
 
@@ -471,7 +474,7 @@
    dragging is pointer-only, and a panel covering something you need is not a
    pointer-users-only problem. */
 .panel:focus-visible {
-  outline: 2px solid #2b6b4a;
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -485,7 +488,7 @@
 /* The range the tinted bars refer to, named where the tint is. */
 .range-note {
   font-weight: 500;
-  color: #6d6b74;
+  color: var(--ink-2);
 }
 
 /* --- Settings view -------------------------------------------------------- */
@@ -497,10 +500,10 @@
   width: 17rem;
   max-width: 100%;
   padding: 0.75rem;
-  background: #f6f5fa;
-  color: #2b2b2b;
+  background: var(--ground);
+  color: var(--ink);
   font-size: 0.85rem;
-  border-radius: 0.9rem;
+  border-radius: var(--radius-card);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   max-height: calc(100vh - 6rem);
   overflow-y: auto;
@@ -517,7 +520,7 @@
 }
 
 .details h2:focus-visible {
-  outline: 2px solid #2b6b4a;
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -527,7 +530,7 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: #6d6b74;
+  color: var(--ink-2);
 }
 
 .summary {
@@ -539,7 +542,7 @@
 }
 
 .summary dt {
-  color: #6d6b74;
+  color: var(--ink-2);
   font-weight: 400;
   margin: 0;
 }
@@ -555,7 +558,7 @@
   margin: 0.5rem 0 0;
   font-size: 0.72rem;
   line-height: 1.4;
-  color: #6d6b74;
+  color: var(--ink-2);
 }
 
 .field {
@@ -571,9 +574,9 @@
   flex: 0 0 5rem;
   font: inherit;
   font-variant-numeric: tabular-nums;
-  color: #2b2b2b;
-  background: #eeedf1;
-  border: 1px solid #d3d2d8;
+  color: var(--ink);
+  background: var(--field);
+  border: 1px solid var(--line);
   border-radius: 0.4rem;
   padding: 0.25rem 0.35rem;
 }
@@ -582,19 +585,29 @@
   display: block;
   width: 100%;
   margin-top: 0.5rem;
-  padding: 0.45rem;
+  padding: 0.5rem;
   font: inherit;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #ffffff;
-  background: #2b6b4a;
+  color: var(--accent);
+  background: var(--accent-soft);
   border: 0;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-control);
   cursor: pointer;
 }
 
 .wide-button:hover:not(:disabled) {
-  background: #235b3e;
+  background: var(--accent-tint);
+}
+
+/* The one action that commits a change gets the app's primary treatment. */
+.wide-button.primary {
+  color: var(--card);
+  background: var(--accent);
+}
+
+.wide-button.primary:hover:not(:disabled) {
+  background: var(--accent-strong);
 }
 
 .wide-button:disabled {
@@ -605,7 +618,7 @@
 .level {
   height: 0.45rem;
   margin-top: 0.5rem;
-  background: #e3e2e8;
+  background: var(--field);
   border-radius: 0.25rem;
   overflow: hidden;
 }
@@ -614,7 +627,7 @@
   display: block;
   width: 0;
   height: 100%;
-  background: #2b6b4a;
+  background: var(--accent);
   border-radius: 0.25rem;
   transition: width 0.08s linear;
 }
@@ -636,7 +649,7 @@
 .slider {
   flex: 1;
   min-width: 0;
-  accent-color: #2b6b4a;
+  accent-color: var(--accent);
 }
 
 .slider-value {
@@ -645,5 +658,5 @@
   font-size: 0.78rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #2b6b4a;
+  color: var(--accent);
 }

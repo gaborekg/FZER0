@@ -34,6 +34,7 @@
     {
       "resources": [
         "src/*.js",
+        "src/*.css",
         "extension/panel/*.js",
         "extension/panel/*.css",
         "extension/worklet/*.js"

@@ -1,21 +1,8 @@
-/* iOS-grouped-list palette, with the app's blue as the single accent and one
-   warm counterpoint for the average-volume figure. */
-:root {
-  --ground: #f0f0f5;
-  --card: #ffffff;
-  --field: #eaeef8;
-  --ink: #16181d;
-  --ink-2: #6c707a;
-  --line: #e2e2e8;
-  --accent: #2f6fed;
-  --accent-soft: #e6edfd;
-  --warm: #e2622c;
-  --green: #2b8a5a;
-  --green-soft: #e4f2ea;
-  --danger: #c8382b;
-  --bar-track: #d6d7dd;
-  --bar-fill: #4a4a4f;
+@import url('../src/design-tokens.css');
 
+/* Only what is specific to this surface. The palette lives in the shared file
+   above, so the extension panel cannot drift away from it. */
+:root {
   --app-bar-height: 2.95rem;
   --tab-bar-height: 4.25rem;
   /* The home-indicator strip. The tab bar pads itself by this, so every
