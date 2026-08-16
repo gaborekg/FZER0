@@ -2,6 +2,7 @@
   const { isMeetCallUrl } = await import(chrome.runtime.getURL('src/meet-url.js'));
   const { createPrefsStore } = await import(chrome.runtime.getURL('src/prefs.js'));
   const { mountPanel } = await import(chrome.runtime.getURL('extension/panel/panel.js'));
+  const { micHelpFor } = await import(chrome.runtime.getURL('src/mic-help.js'));
 
   const HOST_ID = 'fzer0-panel-host';
 
@@ -57,7 +58,7 @@
   // Both of the ways mounting can give up used to do so silently, which from
   // the outside is indistinguishable from a broken extension — the exact
   // report a fresh Chrome profile produces. Say what happened instead.
-  function mountNotice(message, action) {
+  function mountNotice(message, action, steps = []) {
     const shadow = createHost().attachShadow({ mode: 'open' });
     const card = document.createElement('div');
     card.style.cssText = [
@@ -73,13 +74,24 @@
     text.style.cssText = 'margin:0';
     card.appendChild(text);
 
+    if (steps.length > 1) {
+      const list = document.createElement('ol');
+      list.style.cssText = 'margin:0.55rem 0 0;padding-left:1.1rem;font-size:0.78rem;line-height:1.45;color:#6c707a';
+      steps.forEach((step) => {
+        const item = document.createElement('li');
+        item.textContent = step;
+        list.appendChild(item);
+      });
+      card.appendChild(list);
+    }
+
     if (action) {
       const button = document.createElement('button');
       button.textContent = action.label;
       button.style.cssText = [
         'display:block', 'width:100%', 'margin-top:0.7rem', 'padding:0.45rem',
         'font:600 0.8rem system-ui, sans-serif', 'color:#ffffff',
-        'background:#2b6b4a', 'border:0', 'border-radius:0.5rem', 'cursor:pointer',
+        'background:#2f6fed', 'border:0', 'border-radius:0.7rem', 'cursor:pointer',
       ].join(';');
       button.addEventListener('click', action.onClick);
       card.appendChild(button);
@@ -118,8 +130,21 @@
         unmountPanel?.();
         unmountPanel = null;
         stopAudioPipeline();
+
+        // Naming the browser's own wording beats "allow it in the address
+        // bar", and the button lands on the exact page rather than describing
+        // where it is.
+        const help = micHelpFor(navigator.userAgent, { origin: window.location.origin });
         mountNotice(
-          'FZER0 needs the microphone on this page. Allow it in the address bar, then reload the tab.'
+          `FZER0 needs the microphone, and ${help.name} is not giving it. To change that:`,
+          help.settingsUrl
+            ? {
+                label: 'Open microphone settings',
+                onClick: () =>
+                  chrome.runtime.sendMessage({ type: 'open-site-settings', url: help.settingsUrl }),
+              }
+            : null,
+          help.steps
         );
         return;
       }

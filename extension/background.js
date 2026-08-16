@@ -11,6 +11,14 @@ chrome.runtime.onMessage.addListener((message) => {
   if (message?.type === 'open-options') {
     chrome.runtime.openOptionsPage();
   }
+
+  // A web page is not allowed to navigate to chrome:// — deliberately. An
+  // extension is, which is the one advantage this half has when someone has
+  // blocked the microphone: it can land them on the exact settings screen
+  // rather than describing where it is.
+  if (message?.type === 'open-site-settings' && message.url?.startsWith('chrome://settings/')) {
+    chrome.tabs.create({ url: message.url });
+  }
 });
 
 // Clicking the toolbar icon is the obvious thing to try when a panel hasn't

@@ -781,6 +781,39 @@ select.row-input {
   cursor: pointer;
 }
 
+/* Not a toast: this is a set of instructions people need to read while
+   looking at another window, so it stays put until the problem is solved. */
+.mic-blocked {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  padding: 1rem;
+  margin-top: 0.7rem;
+}
+
+.mic-blocked h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.mic-blocked p {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.mic-blocked ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.mic-blocked li {
+  margin-bottom: 0.3rem;
+}
+
 .slider-row {
   display: flex;
   align-items: center;

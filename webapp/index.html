@@ -65,6 +65,16 @@
 
         <p class="visually-hidden" data-el="live-announcement" aria-live="polite"></p>
 
+        <!-- Only shown when the browser is remembering a refusal, in which
+             case asking again does nothing and the user has to go and change
+             it themselves. -->
+        <div class="mic-blocked" data-el="mic-blocked" hidden>
+          <h3>The microphone is blocked</h3>
+          <p data-el="mic-blocked-intro"></p>
+          <ol data-el="mic-blocked-steps"></ol>
+          <button class="wide-button" data-action="recheck-mic">I've allowed it — try again</button>
+        </div>
+
         <!-- Last in the flow, pinned above the tab bar. Stop has to stay in
              reach without scrolling — it is the only thing standing between a
              finished call and a saved session. -->

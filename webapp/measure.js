@@ -8,6 +8,7 @@ import { createTonePlayer } from '../src/tone-player.js';
 import { toneGainFor } from '../src/tone-gain.js';
 import { buildDbMeterSvg, dbFromLevel } from '../src/db-meter.js';
 import { VOLUME_CEILING_RMS, TONE_RESUME_DELAY_MS, ASSUMED_TYPICAL_RMS } from '../src/config.js';
+import { micHelpFor, microphoneIsBlocked } from '../src/mic-help.js';
 import { setAudioSession, startCapture } from './audio.js';
 
 const READOUT_INTERVAL_MS = 250;
@@ -43,6 +44,9 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
   const elapsedEl = root.querySelector('[data-el="elapsed"]');
   const playButton = root.querySelector('[data-action="play-tone"]');
   const announcementEl = root.querySelector('[data-el="live-announcement"]');
+  const micBlockedEl = root.querySelector('[data-el="mic-blocked"]');
+  const micBlockedIntroEl = root.querySelector('[data-el="mic-blocked-intro"]');
+  const micBlockedStepsEl = root.querySelector('[data-el="mic-blocked-steps"]');
 
   // No audio context: the tone is a WAV played through a media element, which
   // is the only reliably audible path on iOS once a microphone is open.
@@ -235,9 +239,12 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
       capture = await startCapture(onFrame);
     } catch {
       recordButton.disabled = false;
-      setStatus('The microphone was blocked. Allow it for this page and try again.');
+      setStatus('FZER0 could not use the microphone.');
+      await showMicHelp();
       return;
     }
+
+    hideMicHelp();
 
     resetLiveState();
     recorder = createSessionRecorder(RANGE_BAND_NOTES);
@@ -357,6 +364,37 @@ export function createMeasureScreen(root, { store, onSessionSaved, onRecordingCh
       return;
     }
     if (capture.isRunning()) setStatus('Measuring. You can switch to your call — leave this tab open.');
+  });
+
+  // "Allow the microphone and try again" is useless advice once a browser is
+  // remembering a refusal: the prompt never comes back, and the setting is
+  // somewhere different in every browser. So name the browser and the actual
+  // words on its screens.
+  async function showMicHelp() {
+    const help = micHelpFor(navigator.userAgent, { origin: window.location.origin });
+    const remembered = await microphoneIsBlocked();
+
+    micBlockedIntroEl.textContent = remembered
+      ? `${help.name} is remembering an earlier refusal, so it will not ask again. Here is where to change it:`
+      : `If ${help.name} did not ask, it may be remembering an earlier refusal. Here is where to change it:`;
+
+    micBlockedStepsEl.replaceChildren(
+      ...help.steps.map((step) => {
+        const item = document.createElement('li');
+        item.textContent = step;
+        return item;
+      })
+    );
+    micBlockedEl.hidden = false;
+  }
+
+  function hideMicHelp() {
+    micBlockedEl.hidden = true;
+  }
+
+  root.querySelector('[data-action="recheck-mic"]').addEventListener('click', () => {
+    hideMicHelp();
+    start();
   });
 
   function applyProfile() {
