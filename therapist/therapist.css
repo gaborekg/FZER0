@@ -1,0 +1,87 @@
+/* Only what the therapist pages add. Everything else is the web app's. */
+
+.app-bar {
+  position: sticky;
+}
+
+/* Room for the back button on both sides, so the name stays centred and a
+   long one ends in "…" instead of running into it. */
+.app-bar h1 {
+  min-width: 0;
+  padding-inline: 6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.back-button {
+  position: absolute;
+  left: 0.6rem;
+  padding: 0.4rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.back-button:disabled {
+  color: var(--ink-2);
+  cursor: default;
+}
+
+.patient-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.85rem 0.9rem;
+  margin-bottom: 0.6rem;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: var(--card);
+  border: 0;
+  border-radius: 1rem;
+  cursor: pointer;
+}
+
+.patient-name {
+  font-weight: 650;
+}
+
+.patient-meta {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.privacy-note {
+  margin: 0.8rem 0.4rem 0;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.missing-list {
+  margin: 0.7rem 0.4rem 0;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+
+.form-actions > * {
+  flex: 1;
+  margin-top: 0;
+}
+
+.cta:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

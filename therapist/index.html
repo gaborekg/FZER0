@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f0f0f5" />
+  <title>FZER0 · Patients</title>
+  <link rel="stylesheet" href="app/app.css" />
+  <link rel="stylesheet" href="therapist.css" />
+</head>
+<body data-screen="patients">
+  <header class="app-bar">
+    <h1 data-el="title" data-plain="true">Patients</h1>
+  </header>
+
+  <main class="screens">
+    <section data-el="list-view">
+      <div data-el="patient-list"></div>
+      <button class="cta" data-action="add-patient">+ Add patient</button>
+      <p class="privacy-note">Data stays on this device. Protect it with a passcode.</p>
+    </section>
+
+    <section data-el="add-view" hidden>
+      <div class="card rows">
+        <label class="row">
+          <span class="row-label">First name</span>
+          <input class="row-input" data-field="firstName" placeholder="—" autocomplete="off" maxlength="40" />
+        </label>
+        <label class="row">
+          <span class="row-label">Last name</span>
+          <input class="row-input" data-field="lastName" placeholder="—" autocomplete="off" maxlength="40" />
+        </label>
+        <label class="row">
+          <span class="row-label">Year of birth</span>
+          <input class="row-input" data-field="yearOfBirth" type="number" inputmode="numeric" min="1900" step="1" placeholder="—" />
+        </label>
+        <label class="row">
+          <span class="row-label">Sex</span>
+          <select class="row-input" data-field="sex">
+            <option value="">—</option>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Intersex</option>
+            <option>Prefer not to say</option>
+          </select>
+        </label>
+        <label class="row">
+          <span class="row-label">Fundamental tone</span>
+          <select class="row-input" data-field="fundamentalNote"></select>
+        </label>
+        <label class="row">
+          <span class="row-label">Lowest note</span>
+          <select class="row-input" data-field="rangeLowNote"></select>
+        </label>
+        <label class="row">
+          <span class="row-label">Highest note</span>
+          <select class="row-input" data-field="rangeHighNote"></select>
+        </label>
+        <label class="row">
+          <span class="row-label">Target note</span>
+          <select class="row-input" data-field="targetNote"></select>
+        </label>
+      </div>
+      <p class="missing-list" data-el="missing" role="status"></p>
+      <div class="form-actions">
+        <button class="wide-button" data-action="cancel-add">Cancel</button>
+        <button class="cta" data-action="save-patient" disabled>Save patient</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="patients.js"></script>
+</body>
+</html>
