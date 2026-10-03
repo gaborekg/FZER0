@@ -34,7 +34,9 @@ export function arcSvg() {
 
 // Ready: the dot shows where the voice is, in cream, without judging it.
 // Recording: the step under the voice lights up and the dot takes its colour.
-export function paintArc(svg, { off, recording, hearing }) {
+// `exact` (fractional semitones) places the dot precisely between steps;
+// without it the dot sits in the middle of the step.
+export function paintArc(svg, { off, exact = null, recording, hearing }) {
   const active = recording && off !== null ? clamp(off) : null;
   svg.querySelectorAll('[data-step]').forEach((path) => {
     path.setAttribute('opacity', Number(path.dataset.step) - SPAN === active ? '1' : '0.8');
@@ -43,7 +45,8 @@ export function paintArc(svg, { off, recording, hearing }) {
   const show = off !== null && (recording || hearing);
   dot.setAttribute('opacity', show ? '1' : '0');
   if (!show) return;
-  const [x, y] = point(START + (clamp(off) + SPAN) * SEG + SEG / 2);
+  const at = exact === null ? off : Math.max(-SPAN - 0.5, Math.min(SPAN + 0.5, exact));
+  const [x, y] = point(START + (at + SPAN) * SEG + SEG / 2);
   dot.setAttribute('cx', x.toFixed(1));
   dot.setAttribute('cy', y.toFixed(1));
   dot.style.stroke = recording ? shapeColour(off) : '';

@@ -70,7 +70,7 @@ function fill(select, options, selected, placeholder) {
 
 const formatDate = (ms) => new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
-export function createProfileScreen(root, { store, isBusy, onChanged, onDeletePatient, onListeningChange = () => {} }) {
+export function createProfileScreen(root, { store, isBusy, onChanged, onDeletePatient, onListeningChange = () => {}, onRecordingsDeleted = () => {} }) {
   root.innerHTML = MARKUP;
   const $ = (selector) => root.querySelector(selector);
   const field = (name) => $(`[data-field="${name}"]`);
@@ -176,6 +176,7 @@ export function createProfileScreen(root, { store, isBusy, onChanged, onDeletePa
     store.clearSessions();
     deleteAudio(sessions.map((s) => s.id).filter(Boolean)).catch(() => {});
     deleteSheet.close();
+    onRecordingsDeleted();
     onChanged();
   });
   $('[data-action="delete-patient"]').addEventListener('click', () => {

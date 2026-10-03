@@ -13,15 +13,16 @@
 <body>
   <span class="blob" aria-hidden="true"></span>
   <div class="app">
-    <header class="patients-head">
-      <h1 class="page-title">Patients</h1>
-      <button type="button" class="cream" data-action="add-patient">Add patient</button>
-    </header>
+    <span class="wordmark">fzero</span>
+    <h1 class="page-title">Patients</h1>
 
     <ul class="patient-grid" data-el="patient-list"></ul>
     <div class="empty" data-el="empty" hidden>
       <strong>No patients yet</strong>
       Add your first patient to start.
+    </div>
+    <div class="page-actions">
+      <button type="button" class="cream" data-action="add-patient">Add patient</button>
     </div>
     <p class="footnote">Data stays on this device. Protect it with a passcode.</p>
   </div>

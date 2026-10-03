@@ -91,16 +91,21 @@ button:disabled { opacity: 0.45; cursor: default; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
 /* --- Patients --------------------------------------------------------------- */
-.patients-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wordmark { align-self: center; font-weight: 700; font-size: 20px; letter-spacing: 0.02em; }
+.page-actions { display: flex; justify-content: center; margin-top: 8px; }
+.page-actions .cream { min-width: 240px; min-height: 52px; padding: 0 28px; }
 .patient-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-.patient-card { display: flex; flex-direction: column; gap: 6px; min-height: 96px; padding: 18px; text-decoration: none; }
-.patient-name { font-size: 20px; font-weight: 400; }
-.summary { font-size: 14px; color: var(--muted); }
+.patient-card { display: flex; flex-direction: column; gap: 8px; min-height: 96px; padding: 20px; text-decoration: none; }
+.patient-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.patient-chevron { font-size: 22px; }
+.summary-zone { font-size: 15px; }
+.patient-name { font-size: 22px; font-weight: 300; }
+.summary { font-size: 15px; color: var(--muted); }
 .summary.good { color: var(--ok); }
 .summary.warn { color: var(--warn); }
 .empty { padding: 40px 12px; text-align: center; color: var(--muted); }
 .empty strong { display: block; color: var(--ink); font-size: 20px; font-weight: 400; margin-bottom: 4px; }
-.footnote { margin: 8px 4px 0; font-size: 13px; color: var(--muted); }
+.footnote { margin: auto 4px 0; padding-top: 16px; font-size: 14px; color: var(--muted); text-align: center; }
 
 /* --- sheets (native <dialog>, top layer) ------------------------------------ */
 dialog.sheet {
@@ -200,21 +205,26 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
 
 /* --- History ------------------------------------------------------------------ */
 .history-layout { display: flex; flex-direction: column; gap: 14px; }
-.progress-card { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-.progress-lines { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; font-size: 14px; margin: 4px 0 0; }
+.progress-card { display: flex; flex-direction: column; gap: 12px; }
+.progress-headline { font-size: 26px; font-weight: 300; line-height: 1.2; }
+.progress-lines { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 16px; font-size: 15px; margin: 0; padding: 16px 18px; }
+.progress-foot { font-size: 14px; color: var(--muted); }
 .progress-lines dt { color: var(--muted); }
 .progress-lines dd { margin: 0; }
 .days { display: flex; flex-direction: column; gap: 18px; }
 .day { display: flex; flex-direction: column; gap: 6px; }
 .day-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 0 4px; }
-.day-head h2 { margin: 0; font-size: 18px; font-weight: 500; }
+.day-head h2 { margin: 0; font-size: 22px; font-weight: 300; }
+.day-change { font-size: 14px; text-align: right; }
 .takes { list-style: none; margin: 0; padding: 0; overflow: hidden; }
-.take { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 10px; align-items: center; padding: 10px 6px 10px 14px; border-top: 1px solid var(--hair); }
+.take { display: grid; grid-template-columns: minmax(0, 1fr) auto 44px; gap: 12px; align-items: center; padding: 10px 6px 10px 16px; border-top: 1px solid var(--hair); }
 .take:first-child { border-top: 0; }
 .take-open { display: flex; flex-direction: column; gap: 3px; min-height: 44px; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
-.take-name { font-size: 16px; }
+.take-name { font-size: 17px; }
 .icon-button { width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--chip); cursor: pointer; font-size: 15px; }
 .day-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.day-actions .share-day { margin-left: auto; min-height: 52px; padding: 0 28px; }
+.load-more { align-self: flex-start; min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--muted); font-size: 20px; font-weight: 300; cursor: pointer; }
 .warn-note { margin: 0 4px; font-size: 13px; color: var(--warn); }
 audio { width: 100%; }
 
@@ -241,6 +251,12 @@ audio { width: 100%; }
   .topbar { grid-template-columns: auto minmax(0, 1fr); }
   .topbar-title { text-align: right; }
   .tabs { grid-column: 1 / -1; justify-self: stretch; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* History rows: zone words under the name, rename button on the right. */
+  .take { grid-template-columns: minmax(0, 1fr) 44px; row-gap: 4px; }
+  .take > .zone-line { grid-column: 1; grid-row: 2; }
+  .take > .icon-button { grid-column: 2; grid-row: 1 / span 2; }
+  .day-head { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .day-change { text-align: left; }
 }
 
 /* --- iPad: two columns -------------------------------------------------------- */

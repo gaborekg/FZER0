@@ -4,7 +4,7 @@
 import { setupStatus } from './src/patient-setup.js';
 import { groupDays, dayKey } from './src/day-groups.js';
 import { bandNotesFor } from './src/voice-bands.js';
-import { hzToNote } from './src/note-hz.js';
+import { hzToNote, noteToHz } from './src/note-hz.js';
 import { makeId } from './src/app-store.js';
 import { micHelpFor } from './src/mic-help.js';
 import { putAudio, deleteAudio, askToPersist } from './app/audio-store.js';
@@ -13,6 +13,7 @@ import { arcSvg, paintArc, lineScaleSvg } from './scale.js';
 import { offFrom, liveWords, textColour, shapeColour, distanceWords, shortWords, clock, hueFor } from './zone.js';
 import { takeValues, SHORT_KEYS, takeOff, changeSentence } from './take-stats.js';
 import { openCalibration } from './calibration.js';
+import { stepWithHysteresis } from './pitch-smoother.js';
 
 const MIN_TAKE_MS = 3000;
 const FRAME_MS = 100;
@@ -24,7 +25,8 @@ const MARKUP = `
     <div class="setup-box">
       <h1 class="setup-title" data-el="setup-title"></h1>
       <ul class="card checklist">
-        <li data-el="check-notes"><span class="check" aria-hidden="true"></span><span class="grow">Voice notes set</span><button type="button" class="ghost" data-action="open-profile">Open Profile</button></li>
+        <li data-el="check-details"><span class="check" aria-hidden="true"></span><span class="grow">Add details</span><button type="button" class="ghost" data-action="open-profile">Open Profile</button></li>
+        <li data-el="check-notes"><span class="check" aria-hidden="true"></span><span class="grow">Target note set</span><button type="button" class="ghost" data-action="open-profile">Open Profile</button></li>
         <li data-el="check-cal"><span class="check" aria-hidden="true"></span><span class="grow">Voice calibrated</span><button type="button" class="ghost" data-action="calibrate">Calibrate</button></li>
       </ul>
     </div>
@@ -115,6 +117,9 @@ export function createMeasureScreen(
   let listening = false;
   let wakeLock = null;
   let announced = null;
+  // The whole-semitone step on show, kept between frames for hysteresis.
+  let shownStep = null;
+  let shownTarget = null;
   // The last take's undo: { kind: 'saved' | 'discarded', session, blob, name }.
   let pending = null;
   // The take on the result screen: { session, blob, name }.
@@ -145,8 +150,11 @@ export function createMeasureScreen(
   function renderSetup() {
     const status = setupStatus(profile, new Date().getFullYear());
     $('[data-el="setup-title"]').textContent = `Before ${profile.firstName || 'the patient'}'s first recording`;
+    const detailsDone = !status.missing.includes('Year of birth') && !status.missing.includes('Sex');
+    const notesDone = !['Fundamental tone', 'Range', 'Target note'].some((item) => status.missing.includes(item));
     [
-      ['check-notes', status.notes, 'open-profile'],
+      ['check-details', detailsDone, 'open-profile'],
+      ['check-notes', notesDone, 'open-profile'],
       ['check-cal', status.calibrated, 'calibrate'],
     ].forEach(([key, done, action]) => {
       const li = $(`[data-el="${key}"]`);
@@ -170,21 +178,29 @@ export function createMeasureScreen(
         refreshProfile();
         onSessionSaved();
       },
+      // Calibration borrowed the microphone; give it back to Ready.
+      onClosed: () => {
+        if (visible && micWanted && isReady() && !shown) turnMicOn();
+      },
     });
   }
   $('[data-action="calibrate"]').addEventListener('click', calibrate);
-  $('[data-action="open-profile"]').addEventListener('click', () => onOpenProfile());
+  root.querySelectorAll('[data-action="open-profile"]').forEach((button) => button.addEventListener('click', () => onOpenProfile()));
 
   // --- live view --------------------------------------------------------------
   function renderSide() {
-    const today = groupDays(store.listSessions()).find((day) => day.key === dayKey(Date.now()));
+    const sessions = store.listSessions();
+    // A saved take deleted elsewhere (History, Profile) has nothing to undo.
+    if (pending?.kind === 'saved' && !sessions.some((s) => s.id === pending.session.id)) pending = null;
+    const today = groupDays(sessions).find((day) => day.key === dayKey(Date.now()));
     const recs = today ? today.recordings : [];
     $('[data-el="next-line"]').textContent = recs.length === 0 ? 'Next: Before session' : 'Next: After session';
     $('[data-el="no-takes"]').hidden = recs.length > 0;
     $('[data-el="today-list"]').replaceChildren(
       ...recs.map((rec) => {
         const s = rec.session;
-        const off = takeOff(s, profile.targetNote);
+        // Each take against the target it was recorded with, as on its result.
+        const off = takeOff(s);
         const li = el('li');
         const top = el('span', 'row-top');
         top.append(el('span', '', rec.name), el('span', 'small muted', `${time(s.startedAtMs)} · ${s.meanHz ? hzToNote(s.meanHz) : '—'}`));
@@ -201,9 +217,15 @@ export function createMeasureScreen(
     const recording = mic.isTaking();
     const r = mic.reading();
     const target = profile.targetNote;
-    const off = mic.isOpen() && r.hz ? offFrom(r.hz, target) : null;
+    const exact = mic.isOpen() && r.hz && target ? 12 * Math.log2(r.hz / noteToHz(target)) : null;
+    if (target !== shownTarget) {
+      shownTarget = target;
+      shownStep = null;
+    }
+    shownStep = stepWithHysteresis(shownStep, exact);
+    const off = exact === null ? null : shownStep;
     const active = recording || r.hearing;
-    paintArc(arc, { off, recording, hearing: r.hearing && mic.isOpen() });
+    paintArc(arc, { off, exact, recording, hearing: r.hearing && mic.isOpen() });
     ring.style.transform = `scale(${(0.45 + 0.55 * (active ? r.level : 0.15)).toFixed(3)})`;
     ring.style.background = recording && off !== null ? ringFor(off) : '';
     ring.classList.toggle('breathe', !recording);
@@ -215,7 +237,7 @@ export function createMeasureScreen(
       big.textContent = words.big;
       sub.textContent = words.sub;
       big.style.color = sub.style.color = textColour(off);
-      $('[data-el="note"]').textContent = `Voice on ${hzToNote(r.hz)}`;
+      $('[data-el="note"]').textContent = `Voice on ${hzToNote(noteToHz(target) * 2 ** (off / 12))}`;
     } else {
       big.textContent = recording ? 'Listening' : 'Ready';
       sub.textContent = '';
@@ -255,14 +277,18 @@ export function createMeasureScreen(
     timer = null;
   }
 
+  let micHelpShown = false;
   async function turnMicOn() {
     micWanted = true;
     try {
       await mic.open();
-      say('');
+      // Clear only the mic help: other notes (audio not recorded) must stay.
+      if (micHelpShown) say('');
+      micHelpShown = false;
     } catch {
       const help = micHelpFor(navigator.userAgent, { origin: window.location.origin });
       say(`FZero could not use the microphone. In ${help.name}:`, help.steps);
+      micHelpShown = true;
     }
     renderLive();
   }
@@ -324,7 +350,11 @@ export function createMeasureScreen(
       takeStartedAt = null;
       onRecordingChange(false);
 
-      if (!summary || tookMs < MIN_TAKE_MS) {
+      if (!summary) {
+        say('Nothing was heard, so nothing was saved. Check the microphone and try again.');
+        return;
+      }
+      if (tookMs < MIN_TAKE_MS) {
         say(`Too short to save (${clock(tookMs)}). Try again.`);
         return;
       }
@@ -341,7 +371,14 @@ export function createMeasureScreen(
         }
       }
       const session = { ...summary, id, hasAudio, shared: false, calibratedAtMs: calibrationAtStart };
-      const { droppedIds } = store.addSession(session);
+      let droppedIds;
+      try {
+        ({ droppedIds } = store.addSession(session));
+      } catch {
+        if (hasAudio) deleteAudio([id]).catch(() => {});
+        say("This take couldn't be saved: the device storage is full.");
+        return;
+      }
       if (droppedIds.length > 0) deleteAudio(droppedIds).catch(() => {});
       onSessionSaved();
       showResult(session, hasAudio ? blob : null);
@@ -531,6 +568,11 @@ export function createMeasureScreen(
     },
     refreshProfile,
     isBusy,
+    // After "Delete all recordings": an old discard must not come back.
+    forgetUndo() {
+      pending = null;
+      if (!views.live.hidden) renderSide();
+    },
     setListening(on) {
       listening = on;
       toggle.disabled = on;

@@ -64,6 +64,10 @@ function openPatient(id, firstTab) {
     store,
     isBusy: () => measure.isBusy(),
     onListeningChange: (on) => measure.setListening(on),
+    onRecordingsDeleted: () => {
+      measure.forgetUndo();
+      history.forgetUndo();
+    },
     onChanged: () => {
       measure.refreshProfile();
       history.render();

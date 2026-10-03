@@ -1,7 +1,49 @@
 // The start screen: the therapist's patients, as cards. Adding asks only for
 // the name; the patient's Profile opens next for everything else.
 import { createPatientList, fullName } from './src/patient-list.js';
-import { patientSummary } from './src/patient-summary.js';
+import { groupDays } from './src/day-groups.js';
+import { shortWords, shapeColour, textColour } from './zone.js';
+import { takeOff, closerPhrase } from './take-stats.js';
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const shortDay = (key) => {
+  const [, m, d] = key.split('-').map(Number);
+  return `${d} ${MONTHS[m - 1]}`;
+};
+const span = (className, text) => {
+  const node = document.createElement('span');
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+};
+
+// Where the last session ended, against the target; and how that compares
+// with where the first day ended.
+function cardLines(sessions, target) {
+  const days = groupDays(sessions);
+  if (days.length === 0 || !target) return [span('summary', 'No recordings yet')];
+  const latest = days[0];
+  const endOff = takeOff(latest.last, target);
+  const zone = span('zone-line summary-zone');
+  const dot = span('zone-dot');
+  dot.setAttribute('aria-hidden', 'true');
+  if (endOff !== null) {
+    dot.style.background = shapeColour(endOff);
+    zone.style.color = textColour(endOff);
+  }
+  zone.append(dot, document.createTextNode(shortWords(endOff)));
+  const lines = [span('summary', `Last session ${shortDay(latest.key)}, ended:`), zone];
+  if (days.length === 1) {
+    lines.push(span('summary', `First day · target ${target}`));
+  } else {
+    const change = closerPhrase(takeOff(days[days.length - 1].last, target), endOff);
+    if (change) {
+      const tail = change.endsWith('further') ? `from ${target}` : `to ${target}`;
+      lines.push(span('summary', `Since first day: ${change} ${tail}`));
+    }
+  }
+  return lines;
+}
 
 const patients = createPatientList(window.localStorage, { namespace: 'fzer0s' });
 
@@ -28,19 +70,11 @@ function renderList() {
       const card = document.createElement('a');
       card.className = 'card patient-card';
       card.href = `patient.html?id=${encodeURIComponent(id)}`;
-      const name = document.createElement('span');
-      name.className = 'patient-name';
-      name.textContent = fullName(profile) || 'Unnamed patient';
-      card.appendChild(name);
-
-      const summary = patientSummary(patients.storeFor(id).listSessions(), profile.targetNote);
-      const lines = summary ? [summary.last, summary.overall].filter(Boolean) : [{ text: 'No recordings yet', tone: '' }];
-      lines.forEach(({ text, tone }) => {
-        const line = document.createElement('span');
-        line.className = `summary ${tone}`.trim();
-        line.textContent = text;
-        card.appendChild(line);
-      });
+      const top = span('patient-top');
+      const chevron = span('muted patient-chevron', '›');
+      chevron.setAttribute('aria-hidden', 'true');
+      top.append(span('patient-name', fullName(profile) || 'Unnamed patient'), chevron);
+      card.append(top, ...cardLines(patients.storeFor(id).listSessions(), profile.targetNote));
       li.appendChild(card);
       return li;
     })

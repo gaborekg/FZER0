@@ -10,9 +10,14 @@ import { createSessionRecorder } from './src/session-recorder.js';
 import { VOLUME_CEILING_RMS } from './src/config.js';
 import { startCapture } from './app/audio.js';
 import { canRecordAudio, startAudioRecording } from './app/audio-recorder.js';
+import { createPitchSmoother } from './pitch-smoother.js';
 
 // A voice heard within this long still counts as "hearing the patient".
 const HEARD_FOR_MS = 800;
+// The circle follows loudness quickly when it rises and eases off when it
+// falls, so it breathes with the voice instead of twitching with each frame.
+const LEVEL_ATTACK = 0.5;
+const LEVEL_RELEASE = 0.12;
 
 export function createLiveMic(getProfile) {
   let capture = null;
@@ -20,7 +25,8 @@ export function createLiveMic(getProfile) {
   let noiseFloor = createNoiseFloor();
   let recorder = null;
   let audio = null;
-  let last = { hz: null, level: 0, db: null, heardAtMs: 0 };
+  const smoother = createPitchSmoother();
+  let last = { level: 0, db: null, heardAtMs: 0 };
 
   function onFrame(frame) {
     const now = Date.now();
@@ -31,9 +37,10 @@ export function createLiveMic(getProfile) {
     const level = volumeLevel(frame.rms, { floorRms, ceilingRms });
     const db = dbFromLevel(level);
     const voiced = classified.category === 'voiced';
+    if (voiced) smoother.add(classified.hz, now);
+    const ease = level > last.level ? LEVEL_ATTACK : LEVEL_RELEASE;
     last = {
-      hz: voiced ? classified.hz : last.hz,
-      level,
+      level: last.level + (level - last.level) * ease,
       db,
       heardAtMs: voiced ? now : last.heardAtMs,
     };
@@ -50,7 +57,8 @@ export function createLiveMic(getProfile) {
           .then((c) => {
             capture = c;
             noiseFloor = createNoiseFloor();
-            last = { hz: null, level: 0, db: null, heardAtMs: 0 };
+            smoother.reset();
+            last = { level: 0, db: null, heardAtMs: 0 };
           })
           .finally(() => {
             opening = null;
@@ -67,8 +75,11 @@ export function createLiveMic(getProfile) {
     isOpen: () => capture !== null,
     isRunning: () => capture?.isRunning() ?? false,
     resume: () => capture?.resume(),
+    // hz is the median of the last second of voice (see pitch-smoother.js),
+    // held between words. The take itself records every frame unsmoothed.
     reading() {
-      return { ...last, hearing: Date.now() - last.heardAtMs < HEARD_FOR_MS };
+      const now = Date.now();
+      return { ...last, hz: smoother.hz(now), hearing: now - last.heardAtMs < HEARD_FOR_MS };
     },
     startTake(notes) {
       recorder = createSessionRecorder(notes);

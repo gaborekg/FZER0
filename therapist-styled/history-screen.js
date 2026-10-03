@@ -1,6 +1,6 @@
 // History: where the latest day ended against the target, how its start and
 // end compare with the previous and the first day, then every day's takes.
-import { groupDays, describeDb } from './src/day-groups.js';
+import { groupDays } from './src/day-groups.js';
 import { summariseProgress } from './src/progress.js';
 import { hzToNote } from './src/note-hz.js';
 import { getAudio, putAudio, deleteAudio } from './app/audio-store.js';
@@ -8,7 +8,7 @@ import { shareFiles } from './app/share.js';
 import { filesForDay } from './day-share.js';
 import { lineScaleSvg } from './scale.js';
 import { distanceWords, shortWords, sideWords, textColour, shapeColour } from './zone.js';
-import { takeValues, takeOff, closerWords } from './take-stats.js';
+import { takeValues, takeOff, closerWords, closerPhrase, louderPhrase } from './take-stats.js';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DIFFERENT = 'Different calibration. Compare volume with care.';
@@ -19,10 +19,21 @@ const shortDay = (key) => {
   return `${d} ${MONTHS[m - 1]}`;
 };
 const time = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-const todayKey = () => {
+const keyOf = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const todayKey = () => keyOf(new Date());
+const yesterdayKey = () => {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  d.setDate(d.getDate() - 1);
+  return keyOf(d);
 };
+// "Today, 10 Oct" / "Yesterday, 9 Oct" / "3 Oct"
+const dayTitle = (key) => {
+  if (key === todayKey()) return `Today, ${shortDay(key)}`;
+  if (key === yesterdayKey()) return `Yesterday, ${shortDay(key)}`;
+  return shortDay(key);
+};
+// Days shown at first, and added by each "Load more".
+const DAYS_PER_PAGE = 3;
 function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -54,37 +65,40 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     const progress = summariseProgress(days);
     const day = progress.today.day;
     const endOff = off(day.last);
-    const card = el('section', 'card progress-card');
-    card.appendChild(el('span', 'small muted', day.key === todayKey() ? 'Today ended' : `${shortDay(day.key)} ended`));
+    const section = el('section', 'progress-card');
+    section.appendChild(el('span', 'muted', day.key === todayKey() ? 'Today ended' : `${shortDay(day.key)} ended`));
     const words = distanceWords(endOff, t);
-    const headline = el('span', '', words);
-    headline.style.fontSize = '22px';
-    headline.style.fontWeight = '300';
+    const headline = el('span', 'progress-headline', words);
     if (endOff !== null) headline.style.color = textColour(endOff);
-    card.appendChild(headline);
-    card.insertAdjacentHTML('beforeend', lineScaleSvg(endOff, { width: 320, label: words }));
+    section.appendChild(headline);
+    section.insertAdjacentHTML('beforeend', lineScaleSvg(endOff, { width: 420, label: words }));
 
-    const dl = el('dl', 'progress-lines');
-    const line = (label, text) => dl.append(el('dt', '', label), el('dd', '', text));
+    const card = el('dl', 'card progress-lines');
+    const line = (label, text) => card.append(el('dt', '', label), el('dd', '', text));
     line(
       day.key === todayKey() ? 'Today' : shortDay(day.key),
       progress.today.single ? `one recording, ${sideWords(off(day.first))}` : `started ${sideWords(off(day.first))}, ended ${sideWords(endOff)}`
     );
-    const compare = (label, cmp) =>
-      line(label, `start ${closerWords(off(cmp.day.first), off(day.first))}, end ${closerWords(off(cmp.day.last), endOff)}`);
+    const compare = (cmp, isFirst) =>
+      line(
+        `vs ${shortDay(cmp.day.key)}`,
+        `started ${closerWords(off(cmp.day.first), off(day.first))}, ended ${closerWords(off(cmp.day.last), endOff)}${isFirst ? ' (first session)' : ''}`
+      );
     const notes = [];
     if (progress.previous) {
-      compare(`vs ${shortDay(progress.previous.day.key)}${progress.previousIsFirst ? ' (first day)' : ''}`, progress.previous);
+      compare(progress.previous, progress.previousIsFirst);
       if (progress.previous.differentCalibration) notes.push(DIFFERENT);
     }
     if (progress.first) {
-      compare(`vs ${shortDay(progress.first.day.key)} (first day)`, progress.first);
+      compare(progress.first, true);
       if (progress.first.differentCalibration && !notes.includes(DIFFERENT)) notes.push(DIFFERENT);
     }
-    card.appendChild(dl);
-    card.appendChild(el('span', 'small muted', `Distances in semitones from ${t}.`));
-    notes.forEach((text) => card.appendChild(el('p', 'warn-note', text)));
-    return card;
+    const foot = el('dd', 'progress-foot');
+    foot.appendChild(el('i', '', `Distances in semitones from ${t}.`));
+    card.append(el('dt'), foot);
+    section.appendChild(card);
+    notes.forEach((text) => section.appendChild(el('p', 'warn-note', text)));
+    return section;
   }
 
   function openTake(rec, { focusName = false } = {}) {
@@ -171,11 +185,11 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
   function dayBlock(day, patient, isLatest) {
     const block = el('section', 'day');
     const head = el('div', 'day-head');
-    head.appendChild(el('h2', '', day.key === todayKey() ? `Today, ${shortDay(day.key)}` : shortDay(day.key)));
+    head.appendChild(el('h2', '', dayTitle(day.key)));
     if (day.recordings.length > 1) {
-      const vol = day.comparison?.volumeDb;
-      const volText = vol === null || vol === undefined ? '' : ` · ${describeDb(vol)}`;
-      head.appendChild(el('span', 'small muted', `${closerWords(off(day.first), off(day.last))}${volText}`));
+      // First take of the day against the last: "1 semitone (0.5 tones) closer · 3 dB louder"
+      const parts = [closerPhrase(off(day.first), off(day.last)), louderPhrase(day.comparison?.volumeDb)].filter(Boolean);
+      head.appendChild(el('span', 'muted day-change', parts.join(' · ')));
     }
     block.appendChild(head);
 
@@ -201,21 +215,19 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
       const li = el('li', 'take');
       const open = el('button', 'take-open');
       open.type = 'button';
-      const top = el('span', 'row-top');
-      top.append(el('span', 'take-name', rec.name), el('span', 'small muted', `${time(s.startedAtMs)} · ${s.meanHz ? hzToNote(s.meanHz) : '—'}`));
-      open.append(top, zoneLine(o, shortWords(o)));
+      open.append(el('span', 'take-name', rec.name), el('span', 'small muted', `${time(s.startedAtMs)} · ${s.meanHz ? hzToNote(s.meanHz) : '—'}`));
       open.addEventListener('click', () => openTake(rec));
       const rename = el('button', 'icon-button', '✎');
       rename.type = 'button';
       rename.setAttribute('aria-label', `Rename ${rec.name}`);
       rename.addEventListener('click', () => openTake(rec, { focusName: true }));
-      li.append(open, rename);
+      li.append(open, zoneLine(o, shortWords(o)), rename);
       list.appendChild(li);
     });
     block.appendChild(list);
 
     const actions = el('div', 'day-actions');
-    const share = el('button', 'ghost', 'Share day');
+    const share = el('button', 'ghost share-day', 'Share day');
     share.type = 'button';
     let prepared = null;
     // The first tap prepares the files and shares straight away; if iOS
@@ -245,12 +257,14 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
         deleteAudio([rec.session.id]).catch(() => {});
         render();
       });
-      actions.appendChild(discard);
+      actions.prepend(discard);
     }
     block.appendChild(actions);
     if (day.calibrationChanged) block.appendChild(el('p', 'warn-note', CHANGED));
     return block;
   }
+
+  let daysShown = DAYS_PER_PAGE;
 
   function render() {
     const days = groupDays(store.listSessions());
@@ -267,7 +281,16 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     const layout = el('div', 'history-layout');
     layout.appendChild(progressCard(days));
     const list = el('div', 'days');
-    days.forEach((day, i) => list.appendChild(dayBlock(day, patient, i === 0)));
+    days.slice(0, daysShown).forEach((day, i) => list.appendChild(dayBlock(day, patient, i === 0)));
+    if (days.length > daysShown) {
+      const more = el('button', 'load-more', 'Load more');
+      more.type = 'button';
+      more.addEventListener('click', () => {
+        daysShown += DAYS_PER_PAGE;
+        render();
+      });
+      list.appendChild(more);
+    }
     layout.appendChild(list);
     root.appendChild(layout);
   }

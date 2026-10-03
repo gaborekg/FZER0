@@ -44,3 +44,19 @@ export function closerWords(fromOff, toOff) {
   if (diff === 0) return 'same distance';
   return `${Math.abs(diff)} ${diff > 0 ? 'closer' : 'further'}`;
 }
+
+// "1 semitone (0.5 tones) closer" / "2 semitones (1 tone) further" / "same distance".
+export function closerPhrase(fromOff, toOff) {
+  if (fromOff === null || toOff === null) return '';
+  const diff = Math.abs(fromOff) - Math.abs(toOff);
+  if (diff === 0) return 'same distance';
+  return `${semitonesAndTones(Math.abs(diff))} ${diff > 0 ? 'closer' : 'further'}`;
+}
+
+// "3 dB louder" / "2 dB quieter" / "same volume".
+export function louderPhrase(db) {
+  if (db === null || db === undefined) return '';
+  const n = Math.round(db);
+  if (n === 0) return 'same volume';
+  return `${Math.abs(n)} dB ${n > 0 ? 'louder' : 'quieter'}`;
+}

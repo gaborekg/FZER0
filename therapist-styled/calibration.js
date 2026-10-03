@@ -8,7 +8,7 @@ const LISTEN_MS = 5000;
 const WARNING =
   "Recalibrating now changes how volume is measured. Today's volume before and after won't compare directly. Pitch is not affected.\n\nCalibrate anyway?";
 
-export function openCalibration({ store, beforeListen = async () => {}, onListeningChange = () => {}, onSaved = () => {} }) {
+export function openCalibration({ store, beforeListen = async () => {}, onListeningChange = () => {}, onSaved = () => {}, onClosed = () => {} }) {
   const profile = store.getProfile();
   const today = dayKey(Date.now());
   const recordedToday = store.listSessions().some((s) => dayKey(s.startedAtMs) === today);
@@ -56,7 +56,10 @@ export function openCalibration({ store, beforeListen = async () => {}, onListen
     await stopListening();
     sheet.close();
   }
-  sheet.addEventListener('close', () => sheet.remove());
+  sheet.addEventListener('close', () => {
+    sheet.remove();
+    onClosed();
+  });
   sheet.addEventListener('cancel', (event) => {
     event.preventDefault();
     close();
