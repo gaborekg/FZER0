@@ -1,4 +1,4 @@
-// Every visible text, in German and English. German is the default.
+// Every visible text, in English and German. English is the default.
 // Entries are strings with {placeholders}, or functions for plurals.
 
 const num = (lang, n) => (lang === 'de' ? String(n).replace('.', ',') : String(n));

@@ -1,5 +1,5 @@
-// German by default (the app is for practices in Germany), English on the
-// Practice page. The choice is per device, like the rest of the data.
+// English by default, German on the Practice page. The choice is per
+// device, like the rest of the data.
 import { STRINGS } from './strings.js';
 
 const KEY = 'fzer0s.lang';
@@ -8,9 +8,9 @@ export const LANGS = ['de', 'en'];
 function readLang() {
   try {
     const value = window.localStorage.getItem(KEY);
-    return LANGS.includes(value) ? value : 'de';
+    return LANGS.includes(value) ? value : 'en';
   } catch {
-    return 'de';
+    return 'en';
   }
 }
 
