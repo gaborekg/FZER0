@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f9f9f9" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#161618" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Patient · FZER0</title>
+  <link rel="stylesheet" href="ios.css" />
+  <link rel="stylesheet" href="measure.css" />
+</head>
+<body>
+  <header class="nav nav-inline">
+    <div class="nav-bar">
+      <button type="button" class="nav-button" data-action="back"><svg viewBox="0 0 13 21" aria-hidden="true"><path d="M11 2L2.5 10.5 11 19" /></svg>Patients</button>
+      <span class="nav-title" data-el="title"></span>
+      <span></span>
+    </div>
+  </header>
+
+  <main>
+    <section class="screen screens" data-screen="measure">
+      <div class="setup-prompt card" data-el="setup-prompt" hidden>
+        <h2 data-el="setup-title">Before the first recording</h2>
+        <ul class="setup-checklist" data-el="setup-checklist"></ul>
+        <button type="button" class="btn-filled" data-action="go-to-profile">Open Profile</button>
+      </div>
+      <div data-el="measure-body">
+        <h2 class="group-title">Volume</h2>
+        <div class="card volume-card">
+          <div class="stat-column">
+            <div class="stat">
+              <span class="stat-label">Live reading</span>
+              <span class="stat-value" data-el="volume-current">—</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Average</span>
+              <span class="stat-value stat-value-warm" data-el="volume-average">—</span>
+            </div>
+          </div>
+          <div class="db-meter" data-el="db-meter" role="img" aria-label="Volume dial"></div>
+        </div>
+
+        <h2 class="group-title">Frequency</h2>
+        <div class="card frequency-card">
+          <div class="stat-column">
+            <div class="stat">
+              <span class="stat-label">Current</span>
+              <span class="stat-value" data-el="pitch-current">—</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Most used</span>
+              <span class="stat-value" data-el="pitch-mode">—</span>
+            </div>
+            <div class="tone-play">
+              <button class="play-button" data-action="play-tone" aria-label="Play your tone">▶</button>
+              <span class="tone-caption">Your Tone</span>
+            </div>
+          </div>
+          <div class="note-bars" data-el="note-bars"></div>
+        </div>
+
+        <p class="visually-hidden" data-el="live-announcement" aria-live="polite"></p>
+
+        <!-- Only shown when the browser is remembering a refusal, in which
+             case asking again does nothing and the user has to go and change
+             it themselves. -->
+        <div class="mic-blocked" data-el="mic-blocked" hidden>
+          <h3>The microphone is blocked</h3>
+          <p data-el="mic-blocked-intro"></p>
+          <ol data-el="mic-blocked-steps"></ol>
+          <button class="wide-button" data-action="recheck-mic">I've allowed it — try again</button>
+        </div>
+
+        <!-- Last in the flow, pinned above the tab bar. Stop has to stay in
+             reach without scrolling — it is the only thing standing between a
+             finished call and a saved session. -->
+        <div class="record-bar">
+          <p class="record-status" data-el="record-status" role="status">
+            Keep the phone at the usual distance, then start.
+          </p>
+          <!-- One compact row each, swapped: Measure must fit without
+               scrolling, so the visit gets a line, not a panel. -->
+          <div class="record-options" data-el="record-options">
+            <label class="audio-switch">
+              <input type="checkbox" data-field="record-audio" />
+              <span data-el="record-audio-label">Also record audio</span>
+            </label>
+            <button type="button" class="link-button" data-action="start-visit">Start therapy visit</button>
+          </div>
+          <div class="visit-bar" data-el="visit-bar" hidden>
+            <span class="visit-stage" data-el="visit-stage"></span>
+            <button type="button" class="link-button danger" data-action="cancel-visit">Cancel visit</button>
+          </div>
+          <div class="record-actions">
+            <button class="record-button" data-action="toggle-recording">Start measuring</button>
+            <span class="elapsed" data-el="elapsed" hidden>0:00</span>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="screen page" data-screen="history" hidden></section>
+    <section class="screen page" data-screen="profile" hidden></section>
+  </main>
+
+  <dialog class="sheet" data-el="recording-sheet"></dialog>
+
+  <nav class="tabbar" aria-label="Patient">
+    <button type="button" class="tab" data-tab="measure">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><path d="M12 19v3" /></svg>
+      <span class="tab-badge" data-el="recording-badge" hidden><span class="visually-hidden">Recording</span></span>
+      Measure
+    </button>
+    <button type="button" class="tab" data-tab="history">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" /><path d="M12 6.5V12l3.5 2" /></svg>
+      History
+    </button>
+    <button type="button" class="tab" data-tab="profile">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></svg>
+      Profile
+    </button>
+  </nav>
+
+  <script type="module" src="patient.js"></script>
+</body>
+</html>

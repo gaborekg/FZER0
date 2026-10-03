@@ -1,0 +1,514 @@
+/* Generated from webapp/app.css (Measure blocks), mapped to iOS tokens in ios.css. */
+body[data-screen='measure'] { overflow: hidden; }
+.screens { padding: 0.9rem 1rem calc(var(--tab-bar-height) + var(--safe-bottom) + 0.5rem); max-width: 30rem; margin: 0 auto; }
+
+/* --- Shared blocks -------------------------------------------------------- */
+
+.group-title {
+  margin: clamp(0.5rem, 1.4dvh, 1.1rem) 0 0.35rem 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+
+.screen > .group-title:first-child {
+  margin-top: 0.2rem;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 1rem;
+  padding: clamp(0.55rem, 1.4dvh, 0.9rem);
+}
+
+.card + .card {
+  margin-top: 0.7rem;
+}
+
+.card-body {
+  margin: 0 0 0.7rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.card-status {
+  margin: 0.5rem 0 0;
+  min-height: 1.2rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.stat-column {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.3rem, 1.2dvh, 0.6rem);
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.stat {
+  background: var(--field);
+  border-radius: 0.8rem;
+  padding: clamp(0.3rem, 1dvh, 0.5rem) 0.7rem clamp(0.35rem, 1.2dvh, 0.65rem);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.stat-value {
+  font-size: clamp(1.05rem, 3.2dvh, 1.6rem);
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.stat-value-warm {
+  color: var(--warm);
+}
+
+/* --- Measure -------------------------------------------------------------- */
+
+/* One screenful, never a scroll. Everything on Measure is live, so anything
+   below the fold is something you are not watching.
+
+   The height is fixed rather than minimum, and the two cards divide what is
+   left after the action bar — 3 parts to the dial, 4 to the chart. `min-height:
+   0` on every link in the chain is what lets them actually shrink; without it a
+   flex item refuses to go below its content and the page scrolls again. */
+.screen[data-screen='measure'],
+[data-el='measure-body'] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.screen[data-screen='measure'] {
+  height: calc(100vh - var(--app-bar-height) - var(--tab-bar-height) - var(--safe-bottom) - 1.9rem);
+  height: calc(100dvh - var(--app-bar-height) - var(--tab-bar-height) - var(--safe-bottom) - 1.9rem);
+}
+
+[data-el='measure-body'] {
+  flex: 1;
+}
+
+/* Both cards are now the same shape: a column of readouts on the left, the
+   instrument filling the rest. The dial was stacked above its figures, which
+   cost it most of its height — and a 180-degree scale squeezed into a short
+   wide box is unreadable at exactly the moment you want to read it. */
+.volume-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.7rem;
+}
+
+[data-el='measure-body'] .volume-card {
+  flex: 3 1 0;
+  min-height: 0;
+}
+
+.volume-card .stat-column .stat {
+  flex: 1;
+  justify-content: center;
+}
+
+[data-el='measure-body'] .frequency-card {
+  flex: 4 1 0;
+  min-height: 0;
+}
+
+/* The dial absorbs the slack: it has a viewBox, so it can be handed any box
+   and will scale to fit it without distorting. */
+[data-el='measure-body'] .db-meter {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Full-bleed and fully opaque. A translucent bar over a bar chart is just an
+   unreadable bar chart — and this is the control that ends the recording, so
+   it has to be the most legible thing on the screen. Sticky only matters on a
+   viewport too short to fit the layout; normally the flex column below puts it
+   here anyway. */
+.record-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: auto -1rem 0;
+  padding: 0.7rem 1rem 0.2rem;
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+}
+
+.record-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.record-button {
+  display: block;
+  flex: 1;
+  padding: 0.85rem;
+  font: inherit;
+  font-weight: 650;
+  color: #ffffff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0.85rem;
+  cursor: pointer;
+}
+
+.record-button[data-recording='true'] {
+  background: var(--danger);
+}
+
+.record-status {
+  margin: 0 0.25rem 0.45rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+/* Driven by the last audio frame, not by a display timer — so a throttled tab
+   shows how long it has actually been measuring, not how long ago you started. */
+.elapsed {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--danger);
+  white-space: nowrap;
+}
+
+/* --- First run ------------------------------------------------------------ */
+
+.setup-prompt {
+  background: var(--card);
+  border-radius: 1rem;
+  padding: 1.4rem 1.1rem 1.2rem;
+  text-align: center;
+}
+
+.setup-prompt h2 {
+  margin: 0 0 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.setup-prompt p {
+  margin: 0 auto 1.1rem;
+  max-width: 26ch;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+
+.db-meter-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 17rem;
+  margin: 0 auto;
+}
+
+.db-meter-svg line[data-el='needle'] {
+  transition: transform 0.15s linear;
+}
+
+.frequency-card {
+  display: flex;
+  align-items: stretch;
+  gap: 0.7rem;
+}
+
+.stat-column .stat {
+  width: 5.6rem;
+}
+
+.tone-play {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: auto;
+}
+
+.play-button {
+  width: clamp(2.2rem, 6dvh, 3.1rem);
+  height: clamp(2.2rem, 6dvh, 3.1rem);
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.play-button:active {
+  background: var(--zone-pressed);
+}
+
+.tone-caption {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.note-bars {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.note-bar {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* A button, as in the extension: tapping a bar plays that note. Same chart,
+   same product, same rules. */
+.bar-track {
+  width: 100%;
+  flex: 1;
+  /* Low floor, because the track now grows with the card rather than setting
+     its height. */
+  min-height: 2.5rem;
+  padding: 0;
+  border: 0;
+  background: var(--bar-track);
+  border-radius: 0.3rem;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.bar-track:active {
+  background: var(--bar-pressed);
+}
+
+.bar-fill {
+  display: block;
+  width: 100%;
+  height: 0;
+  background: var(--bar-fill);
+  border-radius: 0.3rem;
+  transition: height 0.15s linear;
+}
+
+/* The note being spoken right now, called out in the accent — the one thing
+   in the chart that is about this instant rather than the last few seconds. */
+.note-bar.is-current .bar-fill {
+  background: var(--accent);
+}
+
+.note-bar.in-zone .bar-track {
+  background: var(--zone);
+}
+
+.note-bar.is-target .bar-track {
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+
+/* 11px floor. Eighteen labels will not all fit at that size on a narrow
+   phone, so the sharps drop out and the naturals carry the scale — an
+   unlabelled bar is still readable by position, overlapping text is not. */
+.bar-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  white-space: nowrap;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* Rotated, a label is only as wide as its font size, so eighteen at 11px fit
+   comfortably on a phone. A wider band does not, and the sharps step back —
+   driven by how many bars there are rather than by the viewport, because that
+   is what actually decides whether they fit. */
+.bar-label[data-crowded='true'][data-accidental='true'] {
+  visibility: hidden;
+}
+
+@media (max-width: 22rem) {
+  .bar-label {
+    font-size: 0.625rem;
+  }
+}
+
+.note-bar.in-zone .bar-label {
+  color: var(--accent);
+}
+
+.cta {
+  display: block;
+  width: 100%;
+  padding: 0.85rem;
+  font: inherit;
+  font-weight: 650;
+  color: #ffffff;
+  background: var(--accent);
+  border: 0;
+  border-radius: 2rem;
+  cursor: pointer;
+}
+
+.wide-button {
+  display: block;
+  width: 100%;
+  margin-top: 0.7rem;
+  padding: 0.7rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 0;
+  border-radius: 0.7rem;
+  cursor: pointer;
+}
+
+/* Not a toast: this is a set of instructions people need to read while
+   looking at another window, so it stays put until the problem is solved. */
+.mic-blocked {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  padding: 1rem;
+  margin-top: 0.7rem;
+}
+
+.mic-blocked h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.mic-blocked p {
+  margin: 0 0 0.6rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.mic-blocked ol {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.mic-blocked li {
+  margin-bottom: 0.3rem;
+}
+
+/* --- Audio & therapy visits ---------------------------------------------- */
+
+.record-options,
+.visit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0 0.25rem 0.5rem;
+  font-size: 0.82rem;
+}
+
+.audio-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ink-2);
+}
+
+.audio-switch input {
+  accent-color: var(--accent);
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.visit-stage {
+  font-weight: 650;
+  color: var(--accent);
+}
+
+.link-button {
+  padding: 0.35rem 0;
+  font: inherit;
+  font-weight: 650;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.link-button.danger {
+  color: var(--danger);
+}
+
+.link-button:disabled {
+  color: var(--ink-2);
+  cursor: default;
+}
+
+
+/* --- iOS overrides --------------------------------------------------------- */
+.card { border-radius: 10px; }
+.group-title { text-transform: uppercase; font-size: 13px; font-weight: 400; color: var(--label-2); letter-spacing: -0.08px; }
+.record-button { border-radius: 12px; min-height: 50px; font-weight: 600; }
+.record-button[data-recording='true'] { background: var(--red); }
+.record-bar { background: var(--sys-bg); border-top: 0.5px solid var(--separator); }
+[data-action='start-visit'] { display: none; }
+.db-meter-svg [stroke='#1a1a1a'] { stroke: var(--label); }
+.db-meter-svg [fill='#1a1a1a'] { fill: var(--label); }
+.db-meter-svg [stroke='#8b8f95'] { stroke: var(--label-2); }
+.db-meter-svg [fill='#8b8f95'] { fill: var(--label-2); }
+.setup-prompt { text-align: left; }
+.setup-checklist { list-style: none; margin: 12px 0 16px; padding: 0; display: grid; gap: 8px; }
+.setup-checklist li { display: flex; gap: 10px; align-items: center; }
+.setup-checklist .mark { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--label-3); flex: none; display: grid; place-items: center; font-size: 13px; color: #fff; }
+.setup-checklist .done .mark { background: var(--green); border-color: var(--green); }
+
+/* iOS uses a switch, not a checkbox, for an on/off setting. Same input,
+   restyled: 51 × 31 track, green when on. */
+.audio-switch { gap: 0.6rem; color: var(--label); }
+.audio-switch input {
+  -webkit-appearance: none; appearance: none; position: relative; flex: none;
+  width: 51px; height: 31px; margin: 0; border-radius: 16px;
+  background: var(--fill); cursor: pointer; transition: background 0.2s;
+}
+.audio-switch input::after {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%;
+  background: #ffffff; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16);
+  transition: transform 0.2s;
+}
+.audio-switch input:checked { background: var(--green); }
+.audio-switch input:checked::after { transform: translateX(20px); }
+.audio-switch input:disabled { opacity: 0.5; }
+@media (prefers-reduced-motion: reduce) {
+  .audio-switch input, .audio-switch input::after { transition: none; }
+}
+
+/* The dial's target arc is drawn dark green; in iOS colours it is systemGreen,
+   which reads on both light and dark cards. */
+.db-meter-svg [stroke='#2b6b4a'] { stroke: var(--green); }
+
+/* .screen already subtracts the tab bar from its height; padding it again
+   left an empty strip above the tab bar and shrank the dial. */
+.screens[data-screen='measure'] { padding-bottom: 0.5rem; }

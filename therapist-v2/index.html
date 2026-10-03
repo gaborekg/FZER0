@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="FZER0" />
+  <title>Patients · FZER0</title>
+  <link rel="stylesheet" href="ios.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-bar">
+      <span></span>
+      <button type="button" class="nav-button" data-action="add-patient" aria-label="Add patient">
+        <svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>
+      </button>
+    </div>
+    <h1 class="large-title">Patients</h1>
+  </header>
+
+  <main class="page">
+    <section class="group" data-el="list-group">
+      <ul class="list" data-el="patient-list"></ul>
+      <p class="list-footer">Data stays on this device. Protect it with a passcode.</p>
+    </section>
+    <div class="empty-state" data-el="empty" hidden>
+      <strong>No Patients</strong>
+      Tap + to add your first patient.
+      <p class="list-footer" style="margin: 16px 0 0">Data stays on this device. Protect it with a passcode.</p>
+    </div>
+  </main>
+
+  <dialog class="sheet" data-el="add-sheet" aria-labelledby="add-title">
+    <div class="sheet-bar">
+      <button type="button" class="nav-button" data-action="cancel-add">Cancel</button>
+      <span class="sheet-title" id="add-title">New Patient</span>
+      <button type="button" class="nav-button strong" data-action="save-patient" disabled>Add</button>
+    </div>
+    <section class="group">
+      <ul class="list">
+        <li><label class="cell field"><span class="visually-hidden">First name</span><input id="first-name" data-field="firstName" placeholder="First name" maxlength="40" autocomplete="off" /></label></li>
+        <li><label class="cell field"><span class="visually-hidden">Last name</span><input id="last-name" data-field="lastName" placeholder="Last name" maxlength="40" autocomplete="off" /></label></li>
+      </ul>
+      <p class="list-footer">Year of birth, voice and calibration come next, in the patient's Profile.</p>
+    </section>
+  </dialog>
+
+  <script type="module" src="patients.js"></script>
+</body>
+</html>
