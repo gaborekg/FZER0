@@ -5,6 +5,9 @@ import { useAudioDatabase, deleteAudio } from './app/audio-store.js';
 import { createMeasureScreen } from './measure-screen.js';
 import { createHistoryScreen } from './history-screen.js';
 import { createProfileScreen } from './profile-screen.js';
+import { t, applyStatic } from './i18n.js';
+
+applyStatic();
 
 useAudioDatabase('fzer0-styled-audio');
 
@@ -26,7 +29,7 @@ function openPatient(id, firstTab) {
   const store = patients.storeFor(id);
   const getPatient = () => {
     const profile = store.getProfile();
-    return { ...patientContext(profile), displayName: fullName(profile) || 'Patient' };
+    return { ...patientContext(profile), displayName: fullName(profile) || t('patient.fallback') };
   };
   const back = document.querySelector('[data-el="back"]');
   const titleEl = document.querySelector('[data-el="title"]');
@@ -38,7 +41,7 @@ function openPatient(id, firstTab) {
   // Top bar, as on the canvas: the name on Measure, "Name · History", "Profile".
   function showName() {
     const name = getPatient().displayName;
-    titleEl.textContent = current === 'history' ? `${name} · History` : current === 'profile' ? 'Profile' : name;
+    titleEl.textContent = current === 'history' ? t('title.history', { name }) : current === 'profile' ? t('title.profile') : name;
     document.title = `${name} · FZero`;
   }
 
@@ -73,8 +76,8 @@ function openPatient(id, firstTab) {
     },
     onDeletePatient: async () => {
       if (measure.isBusy()) return;
-      const name = fullName(store.getProfile()) || 'this patient';
-      if (!window.confirm(`Delete ${name} and all their recordings? This cannot be undone.`)) return;
+      const name = fullName(store.getProfile()) || t('patient.fallback');
+      if (!window.confirm(t('confirm.deletePatient', { name }))) return;
       const ids = patients.deletePatient(id);
       await deleteAudio(ids).catch(() => {});
       window.location.replace('./');

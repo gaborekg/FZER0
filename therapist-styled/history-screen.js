@@ -9,16 +9,10 @@ import { filesForDay } from './day-share.js';
 import { lineScaleSvg } from './scale.js';
 import { distanceWords, shortWords, sideWords, textColour, shapeColour } from './zone.js';
 import { takeValues, takeOff, closerWords, closerPhrase, louderPhrase } from './take-stats.js';
+import { t, shortDate, clockTime, recordingName } from './i18n.js';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DIFFERENT = 'Different calibration. Compare volume with care.';
-const CHANGED = 'Calibration changed during this day. Compare volume with care.';
-
-const shortDay = (key) => {
-  const [, m, d] = key.split('-').map(Number);
-  return `${d} ${MONTHS[m - 1]}`;
-};
-const time = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+const shortDay = shortDate;
+const time = clockTime;
 const keyOf = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayKey = () => keyOf(new Date());
 const yesterdayKey = () => {
@@ -28,8 +22,8 @@ const yesterdayKey = () => {
 };
 // "Today, 10 Oct" / "Yesterday, 9 Oct" / "3 Oct"
 const dayTitle = (key) => {
-  if (key === todayKey()) return `Today, ${shortDay(key)}`;
-  if (key === yesterdayKey()) return `Yesterday, ${shortDay(key)}`;
+  if (key === todayKey()) return t('h.todayTitle', { d: shortDay(key) });
+  if (key === yesterdayKey()) return t('h.yesterdayTitle', { d: shortDay(key) });
   return shortDay(key);
 };
 // Days shown at first, and added by each "Load more".
@@ -59,13 +53,13 @@ export function createHistoryScreen(root, { store, getPatient }) {
   const off = (session) => takeOff(session, target());
 
   function progressCard(days) {
-    const t = target();
+    const note = target();
     const progress = summariseProgress(days);
     const day = progress.today.day;
     const endOff = off(day.last);
     const section = el('section', 'progress-card');
-    section.appendChild(el('span', 'muted', day.key === todayKey() ? 'Today ended' : `${shortDay(day.key)} ended`));
-    const words = distanceWords(endOff, t);
+    section.appendChild(el('span', 'muted', day.key === todayKey() ? t('h.todayEnded') : t('h.dayEnded', { d: shortDay(day.key) })));
+    const words = distanceWords(endOff, note);
     const headline = el('span', 'progress-headline', words);
     if (endOff !== null) headline.style.color = textColour(endOff);
     section.appendChild(headline);
@@ -74,25 +68,28 @@ export function createHistoryScreen(root, { store, getPatient }) {
     const card = el('dl', 'card progress-lines');
     const line = (label, text) => card.append(el('dt', '', label), el('dd', '', text));
     line(
-      day.key === todayKey() ? 'Today' : shortDay(day.key),
-      progress.today.single ? `one recording, ${sideWords(off(day.first))}` : `started ${sideWords(off(day.first))}, ended ${sideWords(endOff)}`
+      day.key === todayKey() ? t('h.today') : shortDay(day.key),
+      progress.today.single
+        ? t('h.oneRec', { s: sideWords(off(day.first)) })
+        : t('h.startedEnded', { a: sideWords(off(day.first)), b: sideWords(endOff) })
     );
     const compare = (cmp, isFirst) =>
       line(
-        `vs ${shortDay(cmp.day.key)}`,
-        `started ${closerWords(off(cmp.day.first), off(day.first))}, ended ${closerWords(off(cmp.day.last), endOff)}${isFirst ? ' (first session)' : ''}`
+        t('h.vs', { d: shortDay(cmp.day.key) }),
+        t('h.startedEnded', { a: closerWords(off(cmp.day.first), off(day.first)), b: closerWords(off(cmp.day.last), endOff) }) +
+          (isFirst ? t('h.firstSession') : '')
       );
     const notes = [];
     if (progress.previous) {
       compare(progress.previous, progress.previousIsFirst);
-      if (progress.previous.differentCalibration) notes.push(DIFFERENT);
+      if (progress.previous.differentCalibration) notes.push(t('h.different'));
     }
     if (progress.first) {
       compare(progress.first, true);
-      if (progress.first.differentCalibration && !notes.includes(DIFFERENT)) notes.push(DIFFERENT);
+      if (progress.first.differentCalibration && !notes.includes(t('h.different'))) notes.push(t('h.different'));
     }
     const foot = el('dd', 'progress-foot');
-    foot.appendChild(el('i', '', `Distances in semitones from ${t}.`));
+    foot.appendChild(el('i', '', t('h.distNote', { t: note })));
     card.append(el('dt'), foot);
     section.appendChild(card);
     notes.forEach((text) => section.appendChild(el('p', 'warn-note', text)));
@@ -101,34 +98,35 @@ export function createHistoryScreen(root, { store, getPatient }) {
 
   function openTake(rec) {
     const s = rec.session;
+    const recName = recordingName(rec);
     const sheet = document.createElement('dialog');
     sheet.className = 'sheet';
-    sheet.setAttribute('aria-label', rec.name);
+    sheet.setAttribute('aria-label', recName);
     const takeOffValue = off(s);
     const words = distanceWords(takeOffValue, target());
     const grip = el('span', 'sheet-grip');
     grip.setAttribute('aria-hidden', 'true');
-    const title = el('h2', 'sheet-title', rec.name);
+    const title = el('h2', 'sheet-title', recName);
     const when = el('p', 'sheet-text', time(s.startedAtMs));
     const head = el('p', 'result-words', words);
     head.style.textAlign = 'center';
     if (takeOffValue !== null) head.style.color = textColour(takeOffValue);
-    const name = el('label', 'field', 'Name');
+    const name = el('label', 'field', t('h.name'));
     const input = el('input');
     input.maxLength = 40;
     input.value = String(s.customName ?? '').trim();
-    input.placeholder = rec.autoName;
+    input.placeholder = recordingName({ ...rec, session: { ...s, customName: null } });
     name.appendChild(input);
     const audioBox = el('div', 'small muted');
     const values = el('dl', 'card values');
     takeValues(s).forEach(({ label, value }) => values.append(el('dt', '', label), el('dd', '', value)));
     const x = el('button', 'sheet-x', '×');
     x.type = 'button';
-    x.setAttribute('aria-label', 'Close');
-    const del = el('button', 'text-danger', 'Delete recording');
+    x.setAttribute('aria-label', t('common.close'));
+    const del = el('button', 'text-danger', t('h.delete'));
     del.type = 'button';
     del.style.alignSelf = 'center';
-    const close = el('button', 'ghost', 'Close');
+    const close = el('button', 'ghost', t('common.close'));
     close.type = 'button';
     sheet.append(x, grip, title, when, head);
     sheet.insertAdjacentHTML('beforeend', lineScaleSvg(takeOffValue, { width: 420, label: words }));
@@ -136,12 +134,12 @@ export function createHistoryScreen(root, { store, getPatient }) {
     sheet.append(audioBox, values, name, del, close);
 
     if (s.hasAudio) {
-      audioBox.textContent = 'Loading audio…';
+      audioBox.textContent = t('h.loadingAudio');
       getAudio(s.id)
         .then((blob) => {
           audioBox.textContent = '';
           if (!blob) {
-            audioBox.textContent = 'Audio no longer on this device.';
+            audioBox.textContent = t('h.audioGone');
             return;
           }
           sheetUrl = URL.createObjectURL(blob);
@@ -152,10 +150,10 @@ export function createHistoryScreen(root, { store, getPatient }) {
           audioBox.appendChild(audio);
         })
         .catch(() => {
-          audioBox.textContent = 'Audio could not be loaded.';
+          audioBox.textContent = t('h.audioError');
         });
     } else {
-      audioBox.textContent = 'Recorded without audio.';
+      audioBox.textContent = t('h.noAudio');
     }
 
     sheet.addEventListener('close', () => {
@@ -186,11 +184,37 @@ export function createHistoryScreen(root, { store, getPatient }) {
       finish();
     });
     del.addEventListener('click', () => {
-      if (!window.confirm(`Delete “${rec.name}” (${time(s.startedAtMs)})? This cannot be undone.`)) return;
+      if (!window.confirm(t('h.confirmDelete', { name: recName, time: time(s.startedAtMs) }))) return;
       store.deleteSessions([s.id]);
       deleteAudio([s.id]).catch(() => {});
       sheet.close();
       render();
+    });
+    document.body.appendChild(sheet);
+    sheet.showModal();
+  }
+
+  // Health data: say how to share safely before the share sheet opens.
+  function warnBeforeSharing(name, onContinue) {
+    const sheet = document.createElement('dialog');
+    sheet.className = 'sheet';
+    sheet.setAttribute('aria-labelledby', 'share-title');
+    const grip = el('span', 'sheet-grip');
+    grip.setAttribute('aria-hidden', 'true');
+    const title = el('h2', 'sheet-title', t('share.title', { name }));
+    title.id = 'share-title';
+    const actions = el('div', 'sheet-actions');
+    const cancel = el('button', 'ghost', t('common.cancel'));
+    cancel.type = 'button';
+    const go = el('button', 'cream', t('common.continue'));
+    go.type = 'button';
+    actions.append(cancel, go);
+    sheet.append(grip, title, el('p', 'sheet-text', t('share.text')), actions);
+    sheet.addEventListener('close', () => sheet.remove());
+    cancel.addEventListener('click', () => sheet.close());
+    go.addEventListener('click', () => {
+      sheet.close();
+      onContinue();
     });
     document.body.appendChild(sheet);
     sheet.showModal();
@@ -214,11 +238,11 @@ export function createHistoryScreen(root, { store, getPatient }) {
       const li = el('li', 'take');
       const open = el('button', 'take-open');
       open.type = 'button';
-      open.append(el('span', 'take-name', rec.name), el('span', 'small muted', `${time(s.startedAtMs)} · ${s.meanHz ? hzToNote(s.meanHz) : '—'}`));
+      open.append(el('span', 'take-name', recordingName(rec)), el('span', 'small muted', `${time(s.startedAtMs)} · ${s.meanHz ? hzToNote(s.meanHz) : '—'}`));
       open.addEventListener('click', () => openTake(rec));
       const details = el('button', 'icon-button');
       details.type = 'button';
-      details.setAttribute('aria-label', `Show details of ${rec.name}`);
+      details.setAttribute('aria-label', t('h.details', { name: recordingName(rec) }));
       details.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       details.addEventListener('click', () => openTake(rec));
       li.append(open, zoneLine(o, shortWords(o)), details);
@@ -227,26 +251,28 @@ export function createHistoryScreen(root, { store, getPatient }) {
     block.appendChild(list);
 
     const actions = el('div', 'day-actions');
-    const share = el('button', 'ghost share-day', 'Share day');
+    const share = el('button', 'ghost share-day', t('h.share'));
     share.type = 'button';
     let prepared = null;
-    // The first tap prepares the files and shares straight away; if iOS
+    // Runs from the Continue tap of the warning, so iOS still counts it as a
+    // tap. The first run prepares the files and shares straight away; if iOS
     // refuses because the tap was spent waiting, the next tap shares at once.
-    share.addEventListener('click', async () => {
+    const doShare = async () => {
       try {
         if (!prepared) {
-          share.textContent = 'Preparing…';
+          share.textContent = t('h.preparing');
           prepared = await filesForDay(day, patient);
         }
-        share.textContent = 'Share day';
+        share.textContent = t('h.share');
         await shareFiles(prepared, `FZero · ${shortDay(day.key)}`);
       } catch (error) {
-        share.textContent = error?.name === 'NotAllowedError' ? 'Tap again to share' : 'Share day';
+        share.textContent = error?.name === 'NotAllowedError' ? t('h.tapAgain') : t('h.share');
       }
-    });
+    };
+    share.addEventListener('click', () => warnBeforeSharing(patient.displayName, doShare));
     actions.appendChild(share);
     block.appendChild(actions);
-    if (day.calibrationChanged) block.appendChild(el('p', 'warn-note', CHANGED));
+    if (day.calibrationChanged) block.appendChild(el('p', 'warn-note', t('h.changed')));
     return block;
   }
 
@@ -258,7 +284,7 @@ export function createHistoryScreen(root, { store, getPatient }) {
     root.replaceChildren();
     if (days.length === 0) {
       const empty = el('div', 'empty');
-      empty.append(el('strong', '', 'No recordings yet'), document.createTextNode('Recordings appear here, grouped by day.'));
+      empty.append(el('strong', '', t('h.empty')), document.createTextNode(t('h.emptyHint')));
       root.appendChild(empty);
       return;
     }
@@ -267,7 +293,7 @@ export function createHistoryScreen(root, { store, getPatient }) {
     const list = el('div', 'days');
     days.slice(0, daysShown).forEach((day) => list.appendChild(dayBlock(day, patient)));
     if (days.length > daysShown) {
-      const more = el('button', 'load-more', 'Load more');
+      const more = el('button', 'load-more', t('h.loadMore'));
       more.type = 'button';
       more.addEventListener('click', () => {
         daysShown += DAYS_PER_PAGE;

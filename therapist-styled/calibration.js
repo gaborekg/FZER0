@@ -3,18 +3,17 @@
 import { computeCeilingFromSamples, computeTypicalFromSamples } from './src/volume-calibration.js';
 import { dayKey } from './src/day-groups.js';
 import { startCapture } from './app/audio.js';
+import { t } from './i18n.js';
 
 const LISTEN_MS = 5000;
-const WARNING =
-  "Recalibrating now changes how volume is measured. Today's volume before and after won't compare directly. Pitch is not affected.\n\nCalibrate anyway?";
 
 export function openCalibration({ store, beforeListen = async () => {}, onListeningChange = () => {}, onSaved = () => {}, onClosed = () => {} }) {
   const profile = store.getProfile();
   const today = dayKey(Date.now());
   const recordedToday = store.listSessions().some((s) => dayKey(s.startedAtMs) === today);
-  if (profile.calibratedAtMs && recordedToday && !window.confirm(WARNING)) return;
+  if (profile.calibratedAtMs && recordedToday && !window.confirm(t('cal.warning'))) return;
 
-  const first = profile.firstName || 'the patient';
+  const first = profile.firstName || t('cal.thePatient');
   const sheet = document.createElement('dialog');
   sheet.className = 'sheet';
   sheet.setAttribute('aria-labelledby', 'cal-title');
@@ -25,12 +24,12 @@ export function openCalibration({ store, beforeListen = async () => {}, onListen
     <div class="progress" aria-hidden="true"><span data-el="bar"></span></div>
     <p class="sheet-status" role="status" data-el="status"></p>
     <div class="sheet-actions">
-      <button type="button" class="ghost" data-action="cancel">Cancel</button>
-      <button type="button" class="cream" data-action="listen">Start listening</button>
+      <button type="button" class="ghost" data-action="cancel">${t('common.cancel')}</button>
+      <button type="button" class="cream" data-action="listen">${t('cal.listen')}</button>
     </div>`;
-  sheet.querySelector('#cal-title').textContent = `Calibrate ${first}'s voice`;
+  sheet.querySelector('#cal-title').textContent = t('cal.title', { name: first });
   sheet.querySelector('[data-el="text"]').textContent =
-    `Ask ${first} to talk normally for 5 seconds. Keep the device about 30 cm away, the same distance every time.`;
+    t('cal.text', { name: first });
   const bar = sheet.querySelector('[data-el="bar"]');
   const status = sheet.querySelector('[data-el="status"]');
   const listenButton = sheet.querySelector('[data-action="listen"]');
@@ -69,7 +68,7 @@ export function openCalibration({ store, beforeListen = async () => {}, onListen
   listenButton.addEventListener('click', async () => {
     listenButton.disabled = true;
     cancelled = false;
-    status.textContent = 'Waiting for the microphone…';
+    status.textContent = t('cal.waiting');
     bar.style.transform = 'scaleX(0)';
     await beforeListen();
     if (cancelled) return;
@@ -83,13 +82,13 @@ export function openCalibration({ store, beforeListen = async () => {}, onListen
       }
       capture = opened;
     } catch {
-      status.textContent = 'The microphone is blocked. Allow it in Settings, then try again.';
-      listenButton.textContent = 'Try again';
+      status.textContent = t('cal.blocked');
+      listenButton.textContent = t('cal.retry');
       listenButton.disabled = false;
       return;
     }
     onListeningChange(true);
-    status.textContent = 'Listening…';
+    status.textContent = t('cal.listening');
     const startedAt = performance.now();
     const tick = () => {
       const done = Math.min(1, (performance.now() - startedAt) / LISTEN_MS);
@@ -102,8 +101,8 @@ export function openCalibration({ store, beforeListen = async () => {}, onListen
     await stopListening();
 
     if (samples.length === 0) {
-      status.textContent = 'Nothing came through. Check the microphone and try again.';
-      listenButton.textContent = 'Try again';
+      status.textContent = t('cal.nothing');
+      listenButton.textContent = t('cal.retry');
       listenButton.disabled = false;
       return;
     }
@@ -112,7 +111,7 @@ export function openCalibration({ store, beforeListen = async () => {}, onListen
       typicalRms: computeTypicalFromSamples(samples),
       calibratedAtMs: Date.now(),
     });
-    status.textContent = 'Saved';
+    status.textContent = t('cal.saved');
     onSaved();
     setTimeout(() => sheet.open && sheet.close(), 700);
   });

@@ -13,29 +13,38 @@
 <body>
   <span class="blob" aria-hidden="true"></span>
   <div class="app">
-    <span class="wordmark">fzero</span>
-    <h1 class="page-title">Patients</h1>
+    <header class="patients-top">
+      <span></span>
+      <span class="wordmark">fzero</span>
+      <a class="icon-button gear" href="practice.html" data-i18n-aria="patients.practice" aria-label="Practice settings"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.8v2.6M12 18.6v2.6M21.2 12h-2.6M5.4 12H2.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8M18.5 18.5l-1.8-1.8M7.3 7.3L5.5 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="12" r="6.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></a>
+    </header>
+    <h1 class="page-title" data-i18n="patients.title">Patients</h1>
+    <a class="safety-banner card" href="practice.html" data-el="safety" hidden>
+      <span data-i18n="patients.safety">Finish the safety checklist before using FZero with patients.</span>
+      <span class="link-like" data-i18n="patients.safetyOpen">Open checklist</span>
+    </a>
 
     <ul class="patient-grid" data-el="patient-list"></ul>
     <div class="empty" data-el="empty" hidden>
-      <strong>No patients yet</strong>
-      Add your first patient to start.
+      <strong data-i18n="patients.empty">No patients yet</strong>
+      <span data-i18n="patients.emptyHint">Add your first patient to start.</span>
     </div>
     <div class="page-actions">
-      <button type="button" class="cream" data-action="add-patient">Add patient</button>
+      <button type="button" class="cream" data-action="add-patient" data-i18n="patients.add">Add patient</button>
     </div>
-    <p class="footnote">Data stays on this device. Protect it with a passcode.</p>
+    <p class="footnote"><span data-i18n="patients.footnote">Data stays on this device.</span> <a href="legal.html?doc=privacy" data-i18n="legal.privacy">Privacy</a> · <a href="legal.html?doc=imprint" data-i18n="legal.imprint">Imprint</a></p>
   </div>
 
   <dialog class="sheet" data-el="add-sheet" aria-labelledby="add-title">
     <span class="sheet-grip" aria-hidden="true"></span>
-    <h2 class="sheet-title" id="add-title">New patient</h2>
-    <label class="field">First name<input data-field="firstName" maxlength="40" autocomplete="off" /></label>
-    <label class="field">Last name<input data-field="lastName" maxlength="40" autocomplete="off" /></label>
-    <p class="sheet-text">Year of birth, voice and calibration come next, in the patient's Profile.</p>
+    <h2 class="sheet-title" id="add-title" data-i18n="add.title">New patient</h2>
+    <label class="field"><span data-i18n="add.first">First name</span><input data-field="firstName" maxlength="40" autocomplete="off" /></label>
+    <label class="field"><span data-i18n="add.last">Last name</span><input data-field="lastName" maxlength="40" autocomplete="off" /></label>
+    <label class="check-field"><input type="checkbox" data-field="consent" /><span><span data-i18n="add.consent">Signed consent for voice recordings is on file</span><small class="muted" data-i18n="add.consentHint"></small></span></label>
+    <p class="sheet-text" data-i18n="add.hint">Year of birth, voice and calibration come next, in the patient's Profile.</p>
     <div class="sheet-actions">
-      <button type="button" class="ghost" data-action="cancel-add">Cancel</button>
-      <button type="button" class="cream" data-action="save-patient" disabled>Add patient</button>
+      <button type="button" class="ghost" data-action="cancel-add" data-i18n="common.cancel">Cancel</button>
+      <button type="button" class="cream" data-action="save-patient" disabled data-i18n="patients.add">Add patient</button>
     </div>
   </dialog>
 

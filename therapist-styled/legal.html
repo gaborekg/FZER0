@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#121a1c" />
+  <title>FZero</title>
+  <link rel="stylesheet" href="styled.css" />
+</head>
+<body>
+  <span class="blob" aria-hidden="true"></span>
+  <div class="app legal">
+    <header class="topbar no-print">
+      <a class="back" href="practice.html" data-el="back"></a>
+      <span class="topbar-title"></span>
+      <button type="button" class="ghost" data-action="print" hidden></button>
+    </header>
+    <p class="draft-note no-print" data-el="draft"></p>
+    <p class="translation-note no-print" data-el="translation" hidden></p>
+
+    <!-- ===================================================== Datenschutzerklärung -->
+    <article data-doc="privacy" data-lang="de" hidden>
+      <h1>Datenschutzerklärung</h1>
+      <h2>1. Verantwortlicher für diese Website</h2>
+      <p>[Vor- und Nachname]<br />[Straße und Hausnummer]<br />[PLZ Ort]<br />E-Mail: [E-Mail-Adresse]</p>
+      <h2>2. Was FZero ist</h2>
+      <p>FZero ist eine Web-App, mit der logopädische Praxen Tonhöhe und Lautstärke der Stimme ihrer Patientinnen und Patienten messen und dokumentieren. Alle Patientendaten (Namen, Angaben, Messwerte und Tonaufnahmen) werden ausschließlich lokal im Browser des Geräts der Praxis gespeichert. Sie werden nicht an uns oder an Dritte übermittelt; wir haben darauf keinen Zugriff. Verantwortlich für diese Patientendaten ist die jeweilige Praxis.</p>
+      <h2>3. Hosting und Server-Logfiles</h2>
+      <p>Diese Website wird bei GitHub Pages gehostet: GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. Beim Aufruf der Website verarbeitet GitHub technisch notwendige Daten (IP-Adresse, Datum und Uhrzeit, aufgerufene Datei, Browser-Kennung), um die Website auszuliefern und vor Missbrauch zu schützen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse ist eine sichere und funktionsfähige Bereitstellung der Website. Dabei können Daten in die USA übermittelt werden. [Vor Veröffentlichung prüfen: Zertifizierung von GitHub nach dem EU-US Data Privacy Framework, Angemessenheitsbeschluss der EU-Kommission vom 10. Juli 2023.]</p>
+      <h2>4. Keine Cookies, kein Tracking</h2>
+      <p>Wir setzen keine Cookies, keine Analyse- oder Tracking-Werkzeuge und keine externen Schriften oder Inhalte Dritter ein.</p>
+      <h2>5. Mikrofon</h2>
+      <p>Das Mikrofon wird nur genutzt, nachdem Sie es im Browser erlaubt haben. Die Messung und die Aufnahme finden ausschließlich auf dem Gerät statt.</p>
+      <h2>6. Ihre Rechte</h2>
+      <p>Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18) und Widerspruch (Art. 21) sowie das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren (Art. 77). Zu Ihren Patientendaten wenden Sie sich bitte an Ihre Praxis, da nur dort Daten gespeichert sind.</p>
+      <p class="muted">Stand: [Datum]</p>
+    </article>
+    <article data-doc="privacy" data-lang="en" hidden>
+      <h1>Privacy policy</h1>
+      <h2>1. Responsible for this website</h2>
+      <p>[First and last name]<br />[Street and number]<br />[Postcode, city]<br />Email: [email address]</p>
+      <h2>2. What FZero is</h2>
+      <p>FZero is a web app that speech therapy practices use to measure and document the pitch and volume of their patients' voices. All patient data (names, details, measurements and audio recordings) is stored only locally in the browser on the practice's device. It is not sent to us or to anyone else; we have no access to it. The practice is responsible for this patient data.</p>
+      <h2>3. Hosting and server logs</h2>
+      <p>This website is hosted on GitHub Pages: GitHub, Inc., 88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, USA. When the website is opened, GitHub processes technically necessary data (IP address, date and time, requested file, browser identifier) to deliver the website and protect it from abuse. The legal basis is Art. 6(1)(f) GDPR; our legitimate interest is a secure, working website. Data may be transferred to the USA. [Check before publishing: GitHub's certification under the EU-US Data Privacy Framework, EU Commission adequacy decision of 10 July 2023.]</p>
+      <h2>4. No cookies, no tracking</h2>
+      <p>We use no cookies, no analytics or tracking tools, and no external fonts or third-party content.</p>
+      <h2>5. Microphone</h2>
+      <p>The microphone is used only after you allow it in the browser. Measuring and recording happen only on the device.</p>
+      <h2>6. Your rights</h2>
+      <p>You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18) and objection (Art. 21), and the right to lodge a complaint with a data protection supervisory authority (Art. 77). For your patient data, please contact your practice, as data is stored only there.</p>
+      <p class="muted">Last updated: [date]</p>
+    </article>
+
+    <!-- ===================================================== Impressum -->
+    <article data-doc="imprint" data-lang="de" hidden>
+      <h1>Impressum</h1>
+      <h2>Angaben gemäß § 5 DDG</h2>
+      <p>[Vor- und Nachname]<br />[Straße und Hausnummer]<br />[PLZ Ort]</p>
+      <h2>Kontakt</h2>
+      <p>E-Mail: [E-Mail-Adresse]</p>
+      <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+      <p>[Vor- und Nachname, Anschrift wie oben]</p>
+    </article>
+    <article data-doc="imprint" data-lang="en" hidden>
+      <h1>Imprint</h1>
+      <h2>Information according to § 5 DDG (German Digital Services Act)</h2>
+      <p>[First and last name]<br />[Street and number]<br />[Postcode, city]</p>
+      <h2>Contact</h2>
+      <p>Email: [email address]</p>
+      <h2>Responsible for content according to § 18(2) MStV</h2>
+      <p>[First and last name, address as above]</p>
+    </article>
+
+    <!-- ===================================================== Einwilligung -->
+    <article data-doc="consent" data-lang="de" hidden>
+      <h1>Einwilligung in Sprachaufnahmen und deren Auswertung</h1>
+      <div class="hand-block"><strong>Praxis</strong><span class="hand-line"><small>Name der Praxis</small><span class="blank"></span></span><span class="hand-line"><small>Anschrift</small><span class="blank"></span></span></div>
+      <p class="form-line"><strong>Patientin / Patient:</strong> <span class="blank"></span></p>
+      <p class="form-line"><strong>Geburtsjahr:</strong> <span class="blank short"></span></p>
+      <p>Ich bin damit einverstanden, dass die oben genannte Praxis im Rahmen meiner logopädischen Behandlung mit der Web-App FZero</p>
+      <ul>
+        <li>meine Stimme während der Therapiesitzungen aufnimmt (Tonaufnahme),</li>
+        <li>daraus Tonhöhe und Lautstärke misst und</li>
+        <li>die Aufnahmen und Messwerte zusammen mit meinem Namen, Geburtsjahr und Geschlecht speichert,</li>
+      </ul>
+      <p>um den Verlauf meiner Therapie zu dokumentieren und mit mir zu besprechen.</p>
+      <p>Die Daten werden nur auf dem Gerät der Praxis gespeichert und nicht an den Anbieter von FZero oder an Dritte übermittelt. Eine Weitergabe an mich oder an Dritte (zum Beispiel an meine Ärztin oder meinen Arzt) erfolgt nur, wenn ich dem im Einzelfall zustimme.</p>
+      <p>Diese Einwilligung ist freiwillig. Wenn ich nicht einwillige, entstehen mir keine Nachteile für meine Behandlung; es werden dann keine Aufnahmen gemacht.</p>
+      <p>Ich kann diese Einwilligung jederzeit ohne Angabe von Gründen mit Wirkung für die Zukunft widerrufen, mündlich oder schriftlich gegenüber der Praxis. Die Rechtmäßigkeit der bis zum Widerruf erfolgten Verarbeitung bleibt unberührt. Nach einem Widerruf werden meine Aufnahmen gelöscht, soweit keine gesetzliche Aufbewahrungspflicht entgegensteht.</p>
+      <p>Rechtsgrundlage: Art. 6 Abs. 1 lit. a und Art. 9 Abs. 2 lit. a DSGVO. Die Informationen nach Art. 13 DSGVO habe ich erhalten.</p>
+      <div class="signatures">
+        <p class="form-line"><span class="blank"></span><br />Ort, Datum</p>
+        <p class="form-line"><span class="blank"></span><br />Unterschrift Patientin / Patient<br /><small>bei Minderjährigen: Unterschrift der Sorgeberechtigten</small></p>
+      </div>
+    </article>
+    <article data-doc="consent" data-lang="en" hidden>
+      <h1>Consent to voice recordings and their analysis</h1>
+      <div class="hand-block"><strong>Practice</strong><span class="hand-line"><small>Practice name</small><span class="blank"></span></span><span class="hand-line"><small>Address</small><span class="blank"></span></span></div>
+      <p class="form-line"><strong>Patient:</strong> <span class="blank"></span></p>
+      <p class="form-line"><strong>Year of birth:</strong> <span class="blank short"></span></p>
+      <p>I agree that, as part of my speech therapy, the practice named above uses the web app FZero to</p>
+      <ul>
+        <li>record my voice during therapy sessions (audio recording),</li>
+        <li>measure pitch and volume from it, and</li>
+        <li>store the recordings and measurements together with my name, year of birth and sex,</li>
+      </ul>
+      <p>in order to document the course of my therapy and discuss it with me.</p>
+      <p>The data is stored only on the practice's device and is not sent to the provider of FZero or to anyone else. It is shared with me or with others (for example my doctor) only if I agree in the individual case.</p>
+      <p>This consent is voluntary. If I do not consent, my treatment is not affected; no recordings are made.</p>
+      <p>I can withdraw this consent at any time, without giving reasons and with effect for the future, verbally or in writing to the practice. Processing before the withdrawal remains lawful. After a withdrawal my recordings are deleted, unless a legal retention duty applies.</p>
+      <p>Legal basis: Art. 6(1)(a) and Art. 9(2)(a) GDPR. I have received the information under Art. 13 GDPR.</p>
+      <div class="signatures">
+        <p class="form-line"><span class="blank"></span><br />Place, date</p>
+        <p class="form-line"><span class="blank"></span><br />Patient's signature<br /><small>for minors: signature of the legal guardians</small></p>
+      </div>
+    </article>
+
+    <!-- ===================================================== Patienteninformation -->
+    <article data-doc="info" data-lang="de" hidden>
+      <h1>Information zur Verarbeitung Ihrer Daten bei Sprachaufnahmen</h1>
+      <p class="muted">nach Art. 13 DSGVO</p>
+      <h2>1. Verantwortlich</h2>
+      <div class="hand-block"><span class="hand-line"><small>Name der Praxis</small><span class="blank"></span></span><span class="hand-line"><small>Anschrift</small><span class="blank"></span></span><span class="hand-line"><small>Telefon / E-Mail</small><span class="blank"></span></span><span class="hand-line"><small>Datenschutzbeauftragte/r (falls benannt)</small><span class="blank"></span></span></div>
+      <h2>2. Zweck</h2>
+      <p>Wir nehmen Ihre Stimme während der Therapie auf und messen Tonhöhe und Lautstärke, um den Verlauf Ihrer logopädischen Behandlung zu dokumentieren und mit Ihnen zu besprechen.</p>
+      <h2>3. Welche Daten</h2>
+      <p>Name, Geburtsjahr, Geschlecht, Angaben zur Stimme (Grundton, Tonumfang, Zielton), Tonaufnahmen, daraus berechnete Messwerte sowie Datum und Uhrzeit der Aufnahmen.</p>
+      <h2>4. Rechtsgrundlage</h2>
+      <p>Für die Tonaufnahmen und ihre Auswertung: Ihre Einwilligung (Art. 6 Abs. 1 lit. a und Art. 9 Abs. 2 lit. a DSGVO). Für die Behandlungsdokumentation: Art. 9 Abs. 2 lit. h DSGVO in Verbindung mit § 22 Abs. 1 Nr. 1 lit. b BDSG.</p>
+      <h2>5. Speicherort und Empfänger</h2>
+      <p>Die Daten werden ausschließlich auf dem Gerät der Praxis gespeichert, mit der Web-App FZero im Browser. Sie werden nicht an den Anbieter von FZero oder an Dritte übermittelt und nicht in Länder außerhalb der EU übertragen. Eine Weitergabe erfolgt nur mit Ihrer Zustimmung im Einzelfall.</p>
+      <h2>6. Speicherdauer</h2>
+      <p>Bis zum Widerruf Ihrer Einwilligung, spätestens bis <span class="blank inline"></span>. Gesetzliche Aufbewahrungspflichten, zum Beispiel nach § 630f BGB, bleiben unberührt.</p>
+      <h2>7. Ihre Rechte</h2>
+      <p>Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18) und Datenübertragbarkeit (Art. 20). Sie können Ihre Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen (Art. 7 Abs. 3). Sie können sich bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77), zuständig ist: <span class="blank inline wide"></span>.</p>
+      <h2>8. Freiwilligkeit</h2>
+      <p>Die Aufnahmen sind freiwillig. Ohne Ihre Einwilligung findet die Therapie ohne Aufnahmen statt.</p>
+      <h2>9. Keine automatisierte Entscheidung</h2>
+      <p>Es findet keine automatisierte Entscheidungsfindung und kein Profiling statt.</p>
+    </article>
+    <article data-doc="info" data-lang="en" hidden>
+      <h1>Information on how your data is processed for voice recordings</h1>
+      <p class="muted">under Art. 13 GDPR</p>
+      <h2>1. Responsible</h2>
+      <div class="hand-block"><span class="hand-line"><small>Practice name</small><span class="blank"></span></span><span class="hand-line"><small>Address</small><span class="blank"></span></span><span class="hand-line"><small>Phone / email</small><span class="blank"></span></span><span class="hand-line"><small>Data protection officer (if appointed)</small><span class="blank"></span></span></div>
+      <h2>2. Purpose</h2>
+      <p>We record your voice during therapy and measure pitch and volume, to document the course of your speech therapy and discuss it with you.</p>
+      <h2>3. Which data</h2>
+      <p>Name, year of birth, sex, voice details (fundamental tone, range, target note), audio recordings, measurements calculated from them, and the date and time of the recordings.</p>
+      <h2>4. Legal basis</h2>
+      <p>For the audio recordings and their analysis: your consent (Art. 6(1)(a) and Art. 9(2)(a) GDPR). For treatment documentation: Art. 9(2)(h) GDPR in conjunction with § 22(1) no. 1(b) BDSG.</p>
+      <h2>5. Where it is stored, and recipients</h2>
+      <p>The data is stored only on the practice's device, in the web app FZero in the browser. It is not sent to the provider of FZero or to anyone else, and not transferred to countries outside the EU. It is shared only with your agreement in the individual case.</p>
+      <h2>6. How long it is kept</h2>
+      <p>Until you withdraw your consent, at the latest until <span class="blank inline"></span>. Legal retention duties, for example under § 630f BGB, are not affected.</p>
+      <h2>7. Your rights</h2>
+      <p>You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18) and data portability (Art. 20). You can withdraw your consent at any time with effect for the future (Art. 7(3)). You can lodge a complaint with a data protection supervisory authority (Art. 77), the competent one is: <span class="blank inline wide"></span>.</p>
+      <h2>8. Voluntary</h2>
+      <p>The recordings are voluntary. Without your consent, therapy takes place without recordings.</p>
+      <h2>9. No automated decisions</h2>
+      <p>There is no automated decision-making and no profiling.</p>
+    </article>
+  </div>
+  <script type="module" src="legal.js"></script>
+</body>
+</html>

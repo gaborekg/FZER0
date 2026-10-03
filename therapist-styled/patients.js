@@ -3,13 +3,13 @@
 import { createPatientList, fullName } from './src/patient-list.js';
 import { groupDays } from './src/day-groups.js';
 import { shortWords, shapeColour, textColour } from './zone.js';
-import { takeOff, closerPhrase } from './take-stats.js';
+import { takeOff, sinceFirstDay } from './take-stats.js';
+import { t, applyStatic, shortDate as shortDay } from './i18n.js';
+import { safetyDone } from './practice.js';
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const shortDay = (key) => {
-  const [, m, d] = key.split('-').map(Number);
-  return `${d} ${MONTHS[m - 1]}`;
-};
+applyStatic();
+document.title = t('patients.pageTitle');
+document.querySelector('[data-el="safety"]').hidden = safetyDone();
 const span = (className, text) => {
   const node = document.createElement('span');
   if (className) node.className = className;
@@ -21,7 +21,7 @@ const span = (className, text) => {
 // with where the first day ended.
 function cardLines(sessions, target) {
   const days = groupDays(sessions);
-  if (days.length === 0 || !target) return [span('summary', 'No recordings yet')];
+  if (days.length === 0 || !target) return [span('summary', t('card.noRecordings'))];
   const latest = days[0];
   const endOff = takeOff(latest.last, target);
   const zone = span('zone-line summary-zone');
@@ -32,15 +32,12 @@ function cardLines(sessions, target) {
     zone.style.color = textColour(endOff);
   }
   zone.append(dot, document.createTextNode(shortWords(endOff)));
-  const lines = [span('summary', `Last session ${shortDay(latest.key)}, ended:`), zone];
+  const lines = [span('summary', t('card.lastSession', { d: shortDay(latest.key) })), zone];
   if (days.length === 1) {
-    lines.push(span('summary', `First day · target ${target}`));
+    lines.push(span('summary', t('card.firstDay', { t: target })));
   } else {
-    const change = closerPhrase(takeOff(days[days.length - 1].last, target), endOff);
-    if (change) {
-      const tail = change.endsWith('further') ? `from ${target}` : `to ${target}`;
-      lines.push(span('summary', `Since first day: ${change} ${tail}`));
-    }
+    const since = sinceFirstDay(takeOff(days[days.length - 1].last, target), endOff, target);
+    if (since) lines.push(span('summary', since));
   }
   return lines;
 }
@@ -73,7 +70,7 @@ function renderList() {
       const top = span('patient-top');
       const chevron = span('muted patient-chevron', '›');
       chevron.setAttribute('aria-hidden', 'true');
-      top.append(span('patient-name', fullName(profile) || 'Unnamed patient'), chevron);
+      top.append(span('patient-name', fullName(profile) || t('card.unnamed')), chevron);
       card.append(top, ...cardLines(patients.storeFor(id).listSessions(), profile.targetNote));
       li.appendChild(card);
       return li;
@@ -89,6 +86,7 @@ const refreshSave = () => {
 document.querySelector('[data-action="add-patient"]').addEventListener('click', () => {
   firstInput.value = '';
   lastInput.value = '';
+  document.querySelector('[data-field="consent"]').checked = false;
   refreshSave();
   sheet.showModal();
   firstInput.focus();
@@ -102,7 +100,8 @@ lastInput.addEventListener('keydown', (event) => {
 saveButton.addEventListener('click', () => {
   if (saveButton.disabled || !nameOk()) return;
   saveButton.disabled = true;
-  const id = patients.addPatient({ firstName: firstInput.value.trim(), lastName: lastInput.value.trim() });
+  const consentAt = document.querySelector('[data-field="consent"]').checked ? Date.now() : null;
+  const id = patients.addPatient({ firstName: firstInput.value.trim(), lastName: lastInput.value.trim(), consentAt });
   window.location.href = `patient.html?id=${encodeURIComponent(id)}&tab=profile`;
 });
 

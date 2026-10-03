@@ -86,12 +86,24 @@ h1, h2, h3 { text-wrap: balance; }
   background: transparent; color: var(--ink); font-weight: 500; font-size: 15px; cursor: pointer;
 }
 .link { min-height: 44px; padding: 0 6px; border: 0; background: transparent; color: var(--ink); font-weight: 600; font-size: 15px; cursor: pointer; }
+.danger-outline { color: var(--danger); border-color: var(--danger); }
 .text-danger { min-height: 44px; padding: 0 6px; border: 0; background: transparent; color: var(--danger); font-weight: 500; font-size: 15px; cursor: pointer; }
 button:disabled { opacity: 0.45; cursor: default; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
 /* --- Patients --------------------------------------------------------------- */
 .wordmark { align-self: center; font-weight: 700; font-size: 20px; letter-spacing: 0.02em; }
+.patients-top { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; }
+.patients-top .wordmark { justify-self: center; }
+.gear { color: var(--ink); text-decoration: none; }
+.topbar [data-action="print"] { justify-self: end; min-width: 140px; }
+.safety-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; padding: 14px 18px; text-decoration: none; border-color: rgba(240, 192, 138, 0.45); }
+.safety-banner > span:first-child { color: var(--warn); }
+.link-like { font-weight: 600; }
+.footnote a { color: var(--muted); }
+.check-field { display: flex; gap: 12px; align-items: flex-start; padding: 6px 2px; font-size: 16px; cursor: pointer; }
+.check-field input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; }
+.check-field > span { display: flex; flex-direction: column; gap: 4px; }
 .page-actions { margin-top: 4px; }
 .page-actions .cream { width: 100%; min-height: 52px; padding: 0 28px; }
 .patient-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
@@ -254,6 +266,37 @@ audio { width: 100%; }
 .cal-row { padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
 .cal-row .grow { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .lock-note { margin: 0 4px; color: var(--warn); font-size: 14px; }
+
+/* --- Practice and legal pages ---------------------------------------------- */
+.block { display: block; margin-top: 2px; }
+.hand-block { display: flex; flex-direction: column; gap: 14px; margin: 12px 0 18px; }
+.hand-line { display: flex; flex-direction: column; gap: 2px; }
+.hand-line small { color: var(--muted); font-size: 12px; }
+.hand-line .blank { display: block; height: 1.6em; border-bottom: 1px solid var(--muted); max-width: 480px; }
+.blank.inline { display: inline-block; min-width: 220px; border-bottom: 1px solid var(--muted); height: 1.1em; vertical-align: bottom; }
+.blank.inline.wide { min-width: 340px; }
+@media print { .hand-line .blank, .blank.inline { border-color: #000; } .hand-line small { color: #444; } }
+.tab[aria-current='true'] { background: var(--cream); color: var(--on-cream); }
+.lang-switch { justify-self: start; align-self: flex-start; }
+.doc-link { text-decoration: none; color: var(--ink); min-height: 56px; }
+.row-note.warn { color: var(--warn); }
+.draft-note, .translation-note { margin: 0; padding: 12px 16px; border-radius: 14px; background: rgba(240, 192, 138, 0.1); color: var(--warn); font-size: 14px; }
+.legal article { max-width: 72ch; line-height: 1.55; }
+.legal article h1 { font-size: 30px; font-weight: 300; margin: 8px 0 12px; }
+.legal article h2 { font-size: 17px; font-weight: 600; margin: 22px 0 6px; }
+.legal article p, .legal article li { font-size: 16px; }
+.form-line .blank { display: inline-block; min-width: 60%; border-bottom: 1px solid var(--muted); height: 1.2em; vertical-align: bottom; }
+.form-line .blank.short { min-width: 25%; }
+.signatures { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 40px; }
+.signatures .blank { min-width: 100%; }
+@media print {
+  .no-print, .blob { display: none !important; }
+  html, body { background: #fff !important; color: #000; }
+  .app { padding: 0; min-height: 0; }
+  .legal article { max-width: none; color: #000; }
+  .muted { color: #444; }
+  .form-line .blank { border-color: #000; }
+}
 
 /* Phone: the tabs get their own full-width row under the back link and name. */
 @media (max-width: 899px) {
