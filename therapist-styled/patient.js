@@ -35,13 +35,14 @@ function openPatient(id, firstTab) {
   );
   let current = null;
 
+  // Top bar, as on the canvas: the name on Measure, "Name · History", "Profile".
   function showName() {
     const name = getPatient().displayName;
-    titleEl.textContent = name;
+    titleEl.textContent = current === 'history' ? `${name} · History` : current === 'profile' ? 'Profile' : name;
     document.title = `${name} · FZero`;
   }
 
-  const history = createHistoryScreen(screens.history, { store, getPatient, isBusy: () => measure.isBusy() });
+  const history = createHistoryScreen(screens.history, { store, getPatient });
 
   // The back link is hidden while a take is recording or saving: leaving
   // then would lose it.
@@ -64,10 +65,7 @@ function openPatient(id, firstTab) {
     store,
     isBusy: () => measure.isBusy(),
     onListeningChange: (on) => measure.setListening(on),
-    onRecordingsDeleted: () => {
-      measure.forgetUndo();
-      history.forgetUndo();
-    },
+    onRecordingsDeleted: () => measure.forgetUndo(),
     onChanged: () => {
       measure.refreshProfile();
       history.render();
@@ -86,7 +84,6 @@ function openPatient(id, firstTab) {
   async function show(name) {
     if (current === name) return;
     if (current === 'measure') await measure.hide();
-    if (current === 'history') history.forgetUndo();
     current = name;
     Object.entries(screens).forEach(([key, node]) => {
       node.hidden = key !== name;
@@ -95,6 +92,7 @@ function openPatient(id, firstTab) {
       if (tab.dataset.tab === name) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
     });
+    showName();
     if (name === 'history') history.render();
     if (name === 'profile') profile.render();
     window.scrollTo(0, 0);

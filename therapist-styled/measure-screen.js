@@ -64,7 +64,7 @@ const MARKUP = `
   <div class="result-layout" data-el="result" hidden></div>
 `;
 
-const time = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+const time = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
 const ringFor = (off) => {
   const h = Math.round(hueFor(off));
   return `radial-gradient(circle, hsl(${h} 45% 55% / 0.32), hsl(${h} 45% 55% / 0.04) 70%)`;

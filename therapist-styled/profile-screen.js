@@ -3,9 +3,6 @@
 import { bandNotesFor } from './src/voice-bands.js';
 import { notesInRange, isValidRange } from './src/note-hz.js';
 import { applyProfileChange, applySexChange, fundamentalOutsideRange } from './src/patient-setup.js';
-import { createTonePlayer } from './src/tone-player.js';
-import { toneGainFor } from './src/tone-gain.js';
-import { setAudioSession } from './app/audio.js';
 import { deleteAudio } from './app/audio-store.js';
 import { openCalibration } from './calibration.js';
 
@@ -13,21 +10,8 @@ const SEXES = ['Female', 'Male', 'Intersex', 'Prefer not to say'];
 
 const MARKUP = `
   <p class="lock-note" data-el="busy-note" hidden>Stop the recording to edit the profile.</p>
+  <h1 class="page-title" data-el="name"></h1>
   <div class="profile-layout">
-    <div class="profile-col">
-      <h2 class="section-title">Personal</h2>
-      <div class="card rows">
-        <label class="row"><span>First name</span><input data-field="firstName" maxlength="40" autocomplete="off" /></label>
-        <label class="row"><span>Last name</span><input data-field="lastName" maxlength="40" autocomplete="off" /></label>
-        <label class="row"><span>Year of birth</span><input data-field="yearOfBirth" type="number" inputmode="numeric" min="1900" step="1" placeholder="Required" /></label>
-        <label class="row"><span>Sex</span><select data-field="sex"></select></label>
-      </div>
-      <h2 class="section-title">Calibration</h2>
-      <div class="card cal-row">
-        <span class="grow"><span data-el="cal-date"></span><span class="small muted">Same distance every time, about 30 cm</span></span>
-        <button type="button" class="ghost" data-action="calibrate">Calibrate</button>
-      </div>
-    </div>
     <div class="profile-col">
       <h2 class="section-title">Voice</h2>
       <div class="card rows">
@@ -35,11 +19,23 @@ const MARKUP = `
         <label class="row"><span>Lowest note</span><select data-field="rangeLowNote"></select></label>
         <label class="row"><span>Highest note</span><select data-field="rangeHighNote"></select></label>
         <label class="row"><span>Target note</span><select data-field="targetNote"></select></label>
-        <label class="row"><span>Tone volume</span><input data-field="toneVolume" type="range" min="0.2" max="1.4" step="0.05" aria-label="Tone volume" /></label>
-        <div class="row"><span>Target tone</span><button type="button" class="link" data-action="play-tone">Play</button></div>
       </div>
       <p class="row-note" data-el="voice-note"></p>
-      <button type="button" class="text-danger" data-action="delete" style="align-self: flex-start; margin-top: 12px">Delete recordings or patient…</button>
+      <h2 class="section-title">Personal</h2>
+      <div class="card rows">
+        <label class="row"><span>First name</span><input data-field="firstName" maxlength="40" autocomplete="off" /></label>
+        <label class="row"><span>Last name</span><input data-field="lastName" maxlength="40" autocomplete="off" /></label>
+        <label class="row"><span>Year of birth</span><input data-field="yearOfBirth" type="number" inputmode="numeric" min="1900" step="1" placeholder="Required" /></label>
+        <label class="row"><span>Sex</span><select data-field="sex"></select></label>
+      </div>
+    </div>
+    <div class="profile-col">
+      <h2 class="section-title">Calibration</h2>
+      <div class="card cal-row">
+        <span class="grow"><span data-el="cal-date"></span><span class="small muted">Same distance every time, about 30 cm</span></span>
+        <button type="button" class="ghost" data-action="calibrate">Calibrate</button>
+      </div>
+      <button type="button" class="text-danger" data-action="delete" style="align-self: flex-start; margin-top: 18px">Delete recordings or patient…</button>
     </div>
   </div>
 
@@ -75,22 +71,22 @@ export function createProfileScreen(root, { store, isBusy, onChanged, onDeletePa
   const $ = (selector) => root.querySelector(selector);
   const field = (name) => $(`[data-field="${name}"]`);
   const deleteSheet = $('[data-el="delete-sheet"]');
-  const tonePlayer = createTonePlayer();
 
   function render() {
     const p = store.getProfile();
+    $('[data-el="name"]').textContent = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || 'Patient';
     field('firstName').value = p.firstName ?? '';
     field('lastName').value = p.lastName ?? '';
     field('yearOfBirth').value = p.yearOfBirth ?? '';
     field('yearOfBirth').max = String(new Date().getFullYear());
     fill(field('sex'), SEXES, p.sex, 'Required');
-    const notes = bandNotesFor(p.sex);
+    // Highest note first, like a staff reads.
+    const notes = [...bandNotesFor(p.sex)].reverse();
     fill(field('fundamentalNote'), notes, p.fundamentalNote, 'Required');
     fill(field('rangeLowNote'), notes, p.rangeLowNote, 'Required');
     fill(field('rangeHighNote'), notes, p.rangeHighNote, 'Required');
     const usable = Boolean(p.rangeLowNote && p.rangeHighNote && isValidRange(p.rangeLowNote, p.rangeHighNote));
-    fill(field('targetNote'), usable ? notesInRange(p.rangeLowNote, p.rangeHighNote) : [], p.targetNote, usable ? 'Automatic' : 'Set range');
-    field('toneVolume').value = p.toneVolume ?? 1;
+    fill(field('targetNote'), usable ? [...notesInRange(p.rangeLowNote, p.rangeHighNote)].reverse() : [], p.targetNote, usable ? 'Automatic' : 'Set range');
 
     const note = $('[data-el="voice-note"]');
     const outside = fundamentalOutsideRange(p);
@@ -136,15 +132,6 @@ export function createProfileScreen(root, { store, isBusy, onChanged, onDeletePa
   });
   ['sex', 'fundamentalNote', 'rangeLowNote', 'rangeHighNote', 'targetNote'].forEach((name) => {
     field(name).addEventListener('change', () => save({ [name]: field(name).value }));
-  });
-  field('toneVolume').addEventListener('change', () => save({ toneVolume: Number(field('toneVolume').value) }));
-
-  $('[data-action="play-tone"]').addEventListener('click', () => {
-    const p = store.getProfile();
-    const tone = p.targetNote || p.fundamentalNote;
-    if (!tone) return;
-    setAudioSession('playback');
-    tonePlayer.play(tone, { gain: toneGainFor({ ...p, toneVolume: Number(field('toneVolume').value) }) });
   });
 
   $('[data-action="calibrate"]').addEventListener('click', () => {

@@ -28,7 +28,7 @@ html { background: var(--bg-3); }
 body {
   margin: 0;
   min-height: 100dvh;
-  background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%) fixed;
+  background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%);
   color: var(--ink);
   font: 400 16px/1.4 var(--font);
   -webkit-text-size-adjust: 100%;
@@ -92,10 +92,11 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 /* --- Patients --------------------------------------------------------------- */
 .wordmark { align-self: center; font-weight: 700; font-size: 20px; letter-spacing: 0.02em; }
-.page-actions { display: flex; justify-content: center; margin-top: 8px; }
-.page-actions .cream { min-width: 240px; min-height: 52px; padding: 0 28px; }
+.page-actions { margin-top: 4px; }
+.page-actions .cream { width: 100%; min-height: 52px; padding: 0 28px; }
 .patient-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-.patient-card { display: flex; flex-direction: column; gap: 8px; min-height: 96px; padding: 20px; text-decoration: none; }
+.patient-grid > li { display: flex; }
+.patient-card { flex: 1; display: flex; flex-direction: column; gap: 8px; min-height: 96px; padding: 20px; text-decoration: none; }
 .patient-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .patient-chevron { font-size: 22px; }
 .summary-zone { font-size: 15px; }
@@ -115,7 +116,15 @@ dialog.sheet {
   display: none; flex-direction: column; align-items: stretch; gap: 14px;
 }
 dialog.sheet[open] { display: flex; }
+/* The sheet scrolls; nothing inside it may be squeezed (the scale went to 0 px). */
+dialog.sheet > * { flex-shrink: 0; }
+dialog.sheet .scale { margin: 0 auto; }
 dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
+.sheet-x {
+  position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border: 0; border-radius: 50%;
+  background: var(--chip); color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer;
+}
+.icon-button { display: grid; place-items: center; }
 .sheet-grip { align-self: center; width: 40px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.24); }
 .sheet-title { margin: 4px 0 0; text-align: center; font-size: 26px; font-weight: 300; }
 .sheet-text { margin: 0; text-align: center; font-size: 16px; line-height: 1.45; color: var(--muted); }
@@ -188,7 +197,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
 .result-words { margin: 0; font-size: 24px; font-weight: 300; line-height: 1.2; }
 .headline { display: flex; align-items: center; gap: 16px; }
 .halo { --zone: var(--faint); width: 88px; height: 88px; flex: none; border-radius: 50%; border: 1.5px solid var(--zone); box-shadow: 0 0 24px color-mix(in srgb, var(--zone) 35%, transparent), inset 0 0 18px color-mix(in srgb, var(--zone) 20%, transparent); }
-.scale { display: block; width: 100%; height: auto; }
+.scale { display: block; width: 100%; height: auto; flex-shrink: 0; }
 .scale-tick { stroke: var(--ink); }
 .scale-dot { fill: var(--ink); }
 .values { margin: 0; padding: 4px 18px; display: grid; grid-template-columns: minmax(0, 1fr) auto; font-size: 16px; }
@@ -264,7 +273,10 @@ audio { width: 100%; }
   .app { padding-left: max(48px, env(safe-area-inset-left)); padding-right: max(48px, env(safe-area-inset-right)); padding-top: max(28px, env(safe-area-inset-top)); }
   .blob { left: 120px; top: 120px; width: 600px; height: 600px; filter: blur(44px); }
   .page-title { font-size: 40px; }
-  .patient-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .patient-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .patient-card { min-height: 150px; padding: 22px; }
+  .patient-name { font-size: 24px; }
+  .progress-headline { font-size: 32px; }
   .measure-layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 40px; align-items: center; }
   .dial { width: 470px; }
   .dial-big { font-size: 56px; }

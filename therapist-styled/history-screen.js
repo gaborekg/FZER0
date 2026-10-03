@@ -3,7 +3,7 @@
 import { groupDays } from './src/day-groups.js';
 import { summariseProgress } from './src/progress.js';
 import { hzToNote } from './src/note-hz.js';
-import { getAudio, putAudio, deleteAudio } from './app/audio-store.js';
+import { getAudio, deleteAudio } from './app/audio-store.js';
 import { shareFiles } from './app/share.js';
 import { filesForDay } from './day-share.js';
 import { lineScaleSvg } from './scale.js';
@@ -18,7 +18,7 @@ const shortDay = (key) => {
   const [, m, d] = key.split('-').map(Number);
   return `${d} ${MONTHS[m - 1]}`;
 };
-const time = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+const time = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
 const keyOf = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayKey = () => keyOf(new Date());
 const yesterdayKey = () => {
@@ -52,10 +52,8 @@ function zoneLine(off, words) {
   return line;
 }
 
-export function createHistoryScreen(root, { store, getPatient, isBusy }) {
+export function createHistoryScreen(root, { store, getPatient }) {
   let sheetUrl = null;
-  // A take discarded from History, until Undo or the next render elsewhere.
-  let discarded = null;
 
   const target = () => store.getProfile().targetNote;
   const off = (session) => takeOff(session, target());
@@ -101,7 +99,7 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     return section;
   }
 
-  function openTake(rec, { focusName = false } = {}) {
+  function openTake(rec) {
     const s = rec.session;
     const sheet = document.createElement('dialog');
     sheet.className = 'sheet';
@@ -124,17 +122,18 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     const audioBox = el('div', 'small muted');
     const values = el('dl', 'card values');
     takeValues(s).forEach(({ label, value }) => values.append(el('dt', '', label), el('dd', '', value)));
-    const actions = el('div', 'sheet-actions');
-    const close = el('button', 'ghost', 'Close');
-    close.type = 'button';
-    const save = el('button', 'cream', 'Save name');
-    save.type = 'button';
-    actions.append(close, save);
+    const x = el('button', 'sheet-x', '×');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Close');
     const del = el('button', 'text-danger', 'Delete recording');
     del.type = 'button';
-    sheet.append(grip, title, when, head);
+    del.style.alignSelf = 'center';
+    const close = el('button', 'ghost', 'Close');
+    close.type = 'button';
+    sheet.append(x, grip, title, when, head);
     sheet.insertAdjacentHTML('beforeend', lineScaleSvg(takeOffValue, { width: 420, label: words }));
-    sheet.append(name, audioBox, values, actions, del);
+    // Details first (audio, 7 values), then the name, then Delete and Close.
+    sheet.append(audioBox, values, name, del, close);
 
     if (s.hasAudio) {
       audioBox.textContent = 'Loading audio…';
@@ -163,12 +162,28 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
       if (sheetUrl) URL.revokeObjectURL(sheetUrl);
       sheetUrl = null;
       sheet.remove();
+      if (renamed) render();
     });
-    close.addEventListener('click', () => sheet.close());
-    save.addEventListener('click', () => {
-      store.updateSession(s.id, { customName: input.value.trim() || null });
+    // The name saves as it is edited, and on every way of closing.
+    let renamed = false;
+    const saveName = () => {
+      const custom = input.value.trim() || null;
+      if (custom !== (String(s.customName ?? '').trim() || null)) {
+        store.updateSession(s.id, { customName: custom });
+        s.customName = custom;
+        renamed = true;
+      }
+    };
+    input.addEventListener('change', saveName);
+    const finish = () => {
+      saveName();
       sheet.close();
-      render();
+    };
+    close.addEventListener('click', finish);
+    x.addEventListener('click', finish);
+    sheet.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      finish();
     });
     del.addEventListener('click', () => {
       if (!window.confirm(`Delete “${rec.name}” (${time(s.startedAtMs)})? This cannot be undone.`)) return;
@@ -179,10 +194,9 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     });
     document.body.appendChild(sheet);
     sheet.showModal();
-    if (focusName) input.focus();
   }
 
-  function dayBlock(day, patient, isLatest) {
+  function dayBlock(day, patient) {
     const block = el('section', 'day');
     const head = el('div', 'day-head');
     head.appendChild(el('h2', '', dayTitle(day.key)));
@@ -193,21 +207,6 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     }
     block.appendChild(head);
 
-    if (isLatest && discarded) {
-      const line = el('p', 'undo-line');
-      const undo = el('button', 'link', 'Undo');
-      undo.type = 'button';
-      undo.addEventListener('click', async () => {
-        const d = discarded;
-        discarded = null;
-        store.addSession(d.session);
-        if (d.blob) await putAudio(d.session.id, d.blob).catch(() => {});
-        render();
-      });
-      line.append(el('span', 'muted', `${discarded.name} discarded ·`), undo);
-      block.appendChild(line);
-    }
-
     const list = el('ul', 'card takes');
     day.recordings.forEach((rec) => {
       const s = rec.session;
@@ -217,11 +216,12 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
       open.type = 'button';
       open.append(el('span', 'take-name', rec.name), el('span', 'small muted', `${time(s.startedAtMs)} · ${s.meanHz ? hzToNote(s.meanHz) : '—'}`));
       open.addEventListener('click', () => openTake(rec));
-      const rename = el('button', 'icon-button', '✎');
-      rename.type = 'button';
-      rename.setAttribute('aria-label', `Rename ${rec.name}`);
-      rename.addEventListener('click', () => openTake(rec, { focusName: true }));
-      li.append(open, zoneLine(o, shortWords(o)), rename);
+      const details = el('button', 'icon-button');
+      details.type = 'button';
+      details.setAttribute('aria-label', `Show details of ${rec.name}`);
+      details.innerHTML = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      details.addEventListener('click', () => openTake(rec));
+      li.append(open, zoneLine(o, shortWords(o)), details);
       list.appendChild(li);
     });
     block.appendChild(list);
@@ -245,20 +245,6 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
       }
     });
     actions.appendChild(share);
-    if (isLatest) {
-      const discard = el('button', 'text-danger', 'Discard last take');
-      discard.type = 'button';
-      discard.addEventListener('click', async () => {
-        if (isBusy()) return;
-        const rec = day.recordings[day.recordings.length - 1];
-        const blob = rec.session.hasAudio ? await getAudio(rec.session.id).catch(() => null) : null;
-        discarded = { session: rec.session, blob, name: rec.name };
-        store.deleteSessions([rec.session.id]);
-        deleteAudio([rec.session.id]).catch(() => {});
-        render();
-      });
-      actions.prepend(discard);
-    }
     block.appendChild(actions);
     if (day.calibrationChanged) block.appendChild(el('p', 'warn-note', CHANGED));
     return block;
@@ -270,18 +256,16 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     const days = groupDays(store.listSessions());
     const patient = getPatient();
     root.replaceChildren();
-    root.appendChild(el('h1', 'page-title', patient.displayName));
     if (days.length === 0) {
       const empty = el('div', 'empty');
       empty.append(el('strong', '', 'No recordings yet'), document.createTextNode('Recordings appear here, grouped by day.'));
       root.appendChild(empty);
-      if (discarded) discarded = null;
       return;
     }
     const layout = el('div', 'history-layout');
     layout.appendChild(progressCard(days));
     const list = el('div', 'days');
-    days.slice(0, daysShown).forEach((day, i) => list.appendChild(dayBlock(day, patient, i === 0)));
+    days.slice(0, daysShown).forEach((day) => list.appendChild(dayBlock(day, patient)));
     if (days.length > daysShown) {
       const more = el('button', 'load-more', 'Load more');
       more.type = 'button';
@@ -295,11 +279,5 @@ export function createHistoryScreen(root, { store, getPatient, isBusy }) {
     root.appendChild(layout);
   }
 
-  return {
-    render,
-    // Leaving History forgets an undone discard: it is gone for good then.
-    forgetUndo() {
-      discarded = null;
-    },
-  };
+  return { render };
 }
