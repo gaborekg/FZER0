@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#121a1c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="FZero" />
+  <title>Patients · FZero</title>
+  <link rel="stylesheet" href="styled.css" />
+</head>
+<body>
+  <span class="blob" aria-hidden="true"></span>
+  <div class="app">
+    <header class="patients-head">
+      <h1 class="page-title">Patients</h1>
+      <button type="button" class="cream" data-action="add-patient">Add patient</button>
+    </header>
+
+    <ul class="patient-grid" data-el="patient-list"></ul>
+    <div class="empty" data-el="empty" hidden>
+      <strong>No patients yet</strong>
+      Add your first patient to start.
+    </div>
+    <p class="footnote">Data stays on this device. Protect it with a passcode.</p>
+  </div>
+
+  <dialog class="sheet" data-el="add-sheet" aria-labelledby="add-title">
+    <span class="sheet-grip" aria-hidden="true"></span>
+    <h2 class="sheet-title" id="add-title">New patient</h2>
+    <label class="field">First name<input data-field="firstName" maxlength="40" autocomplete="off" /></label>
+    <label class="field">Last name<input data-field="lastName" maxlength="40" autocomplete="off" /></label>
+    <p class="sheet-text">Year of birth, voice and calibration come next, in the patient's Profile.</p>
+    <div class="sheet-actions">
+      <button type="button" class="ghost" data-action="cancel-add">Cancel</button>
+      <button type="button" class="cream" data-action="save-patient" disabled>Add patient</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="patients.js"></script>
+</body>
+</html>
