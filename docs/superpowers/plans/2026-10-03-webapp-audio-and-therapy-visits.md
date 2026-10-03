@@ -12,6 +12,7 @@
 
 ## Global Constraints
 
+- Work on a feature branch (`webapp-audio-visits`), never directly on `main`. Do not push until Gabor says so — the live GitHub Pages URL is the app he uses with his therapist.
 - Web app only. Do not modify anything under `extension/` or `mock/`. Shared `src/` files may change only additively; `npm test` must stay green.
 - No new dependencies, no build step, no network calls, no paid services.
 - Recordings run until the user taps Stop — no length limit.
@@ -214,7 +215,7 @@ git commit -m "Name shared files by date, adding the time when a day has two vis
   - `markRecording(visit): Visit` — sets `recording` to the current stage
   - `markRecorded(visit, sessionId: string): Visit` — fills the current stage's id, clears `recording`
   - `clearRecording(visit): Visit`
-  - `compareVisit(before: Summary|null, after: Summary|null): { semitones: number|null, direction: 'lower'|'higher'|'same'|null }`
+  - `compareVisit(before: Summary|null, after: Summary|null): { semitones: number|null, direction: 'lower'|'higher'|'same'|'pending'|null }` — `'pending'` when there is no After yet
   - `describeChange(comparison): string`
   - `historyItems(sessions: Summary[], visits: Visit[]): Array<{ kind: 'visit', visit, before, after } | { kind: 'session', session }>` newest first
 
@@ -296,8 +297,13 @@ test('less than half a semitone is reported as no clear change', () => {
 
 test('without a pitch on both sides there is nothing to compare', () => {
   assert.deepEqual(compareVisit({ meanHz: null }, { meanHz: 98 }), { semitones: null, direction: null });
-  assert.deepEqual(compareVisit({ meanHz: 110 }, null), { semitones: null, direction: null });
   assert.equal(describeChange({ semitones: null, direction: null }), 'not enough voice to compare');
+});
+
+test('a visit with no After yet says so, rather than blaming the voice', () => {
+  const result = compareVisit({ meanHz: 110 }, null);
+  assert.deepEqual(result, { semitones: null, direction: 'pending' });
+  assert.equal(describeChange(result), 'After not recorded yet');
 });
 
 test('history groups a visit\'s two sessions into one item, newest first', () => {
@@ -387,7 +393,8 @@ export function clearRecording(visit) {
 }
 
 export function compareVisit(before, after) {
-  if (!before?.meanHz || !after?.meanHz) return { semitones: null, direction: null };
+  if (!after) return { semitones: null, direction: 'pending' };
+  if (!before?.meanHz || !after.meanHz) return { semitones: null, direction: null };
   const semitones = 12 * Math.log2(after.meanHz / before.meanHz);
   let direction = 'same';
   if (semitones <= -SAME_SEMITONES) direction = 'lower';
@@ -396,6 +403,7 @@ export function compareVisit(before, after) {
 }
 
 export function describeChange({ semitones, direction }) {
+  if (direction === 'pending') return 'After not recorded yet';
   if (direction === null) return 'not enough voice to compare';
   if (direction === 'same') return 'about the same (within half a semitone)';
   return `${Math.abs(semitones).toFixed(1)} semitones ${direction}`;
@@ -510,7 +518,7 @@ test('a visit is a two-column table with the change underneath', () => {
 test('a visit with no After yet shows dashes and no change', () => {
   const text = buildVisitResultsText({ startedAtMs: before.startedAtMs }, before, null);
   assert.match(text, /Average {5}A2 \(110 Hz\) {3}—/);
-  assert.match(text, /Change: not enough voice to compare/);
+  assert.match(text, /Change: After not recorded yet/);
 });
 
 test('missing figures show a dash instead of "null"', () => {
@@ -1050,9 +1058,7 @@ export function startAudioRecording(stream) {
     if (event.data.size > 0) chunks.push(event.data);
   };
 
-  // A chunk every second, so a long recording is not one huge buffer handed
-  // over only at the end.
-  recorder.start(1000);
+  recorder.start();
 
   const collect = () =>
     chunks.length > 0 ? new Blob(chunks, { type: recorder.mimeType || mimeType || 'audio/mp4' }) : null;
@@ -2066,6 +2072,7 @@ Run on the live URL (HTTPS) in Safari, then again from the Home Screen app.
 - [ ] Cancel visit (in the After step) → confirm → visit and its Before disappear from History.
 - [ ] Profile → Delete all sessions → warning mentions recordings → History empty.
 - [ ] Old sessions recorded before this update still show in History and in the CSV.
+- [ ] Recordings show the right length and can be scrubbed, in History and in Files.
 - [ ] Measure screen does not scroll on iPhone (portrait).
 ```
 
