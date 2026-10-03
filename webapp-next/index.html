@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f0f0f5" />
+  <title>FZER0</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <header class="app-bar">
+    <h1 data-el="screen-title">FZER0</h1>
+  </header>
+
+  <main class="screens">
+
+    <!-- ── Measure ──────────────────────────────────────────────────── -->
+    <section class="screen" data-screen="measure">
+
+      <!-- Shown until there is a target to measure against. Onboarding lives
+           in Profile, so Measure has to be the thing that points at it. -->
+      <div class="setup-prompt" data-el="setup-prompt" hidden>
+        <h2>Set your notes first</h2>
+        <p>
+          FZER0 needs to know the range you are aiming for before a measurement
+          means anything. It takes a minute, once.
+        </p>
+        <button class="cta" data-action="go-to-profile">Open Profile</button>
+      </div>
+
+      <div data-el="measure-body">
+        <h2 class="group-title">Volume</h2>
+        <div class="card volume-card">
+          <div class="stat-column">
+            <div class="stat">
+              <span class="stat-label">Live reading</span>
+              <span class="stat-value" data-el="volume-current">—</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Average</span>
+              <span class="stat-value stat-value-warm" data-el="volume-average">—</span>
+            </div>
+          </div>
+          <div class="db-meter" data-el="db-meter" role="img" aria-label="Volume dial"></div>
+        </div>
+
+        <h2 class="group-title">Frequency</h2>
+        <div class="card frequency-card">
+          <div class="stat-column">
+            <div class="stat">
+              <span class="stat-label">Current</span>
+              <span class="stat-value" data-el="pitch-current">—</span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Most used</span>
+              <span class="stat-value" data-el="pitch-mode">—</span>
+            </div>
+            <div class="tone-play">
+              <button class="play-button" data-action="play-tone" aria-label="Play your tone">▶</button>
+              <span class="tone-caption">Your Tone</span>
+            </div>
+          </div>
+          <div class="note-bars" data-el="note-bars"></div>
+        </div>
+
+        <p class="visually-hidden" data-el="live-announcement" aria-live="polite"></p>
+
+        <!-- Only shown when the browser is remembering a refusal, in which
+             case asking again does nothing and the user has to go and change
+             it themselves. -->
+        <div class="mic-blocked" data-el="mic-blocked" hidden>
+          <h3>The microphone is blocked</h3>
+          <p data-el="mic-blocked-intro"></p>
+          <ol data-el="mic-blocked-steps"></ol>
+          <button class="wide-button" data-action="recheck-mic">I've allowed it — try again</button>
+        </div>
+
+        <!-- Last in the flow, pinned above the tab bar. Stop has to stay in
+             reach without scrolling — it is the only thing standing between a
+             finished call and a saved session. -->
+        <div class="record-bar">
+          <p class="record-status" data-el="record-status" role="status">
+            Headphones on, then start. It listens while you talk.
+          </p>
+          <!-- One compact row each, swapped: Measure must fit without
+               scrolling, so the visit gets a line, not a panel. -->
+          <div class="record-options" data-el="record-options">
+            <label class="audio-switch">
+              <input type="checkbox" data-field="record-audio" />
+              <span data-el="record-audio-label">Also record audio</span>
+            </label>
+            <button type="button" class="link-button" data-action="start-visit">Start therapy visit</button>
+          </div>
+          <div class="visit-bar" data-el="visit-bar" hidden>
+            <span class="visit-stage" data-el="visit-stage"></span>
+            <button type="button" class="link-button danger" data-action="cancel-visit">Cancel visit</button>
+          </div>
+          <div class="record-actions">
+            <button class="record-button" data-action="toggle-recording">Start measuring</button>
+            <span class="elapsed" data-el="elapsed" hidden>0:00</span>
+          </div>
+        </div>
+      </div>
+
+      <dialog class="visit-result" data-el="visit-result">
+        <h2>Visit complete</h2>
+        <p class="visit-result-change" data-el="visit-result-change"></p>
+        <div class="visit-result-figures" data-el="visit-result-figures"></div>
+        <div data-el="visit-result-actions"></div>
+        <form method="dialog">
+          <button class="cta visit-result-done">Done</button>
+        </form>
+      </dialog>
+    </section>
+
+    <!-- ── History ──────────────────────────────────────────────────── -->
+    <section class="screen" data-screen="history" hidden>
+      <h2 class="group-title">Progress</h2>
+      <div class="card" data-el="trend-card"></div>
+
+      <h2 class="group-title">Sessions</h2>
+      <div data-el="session-list"></div>
+      <button class="wide-button" data-action="export-sessions">Export for your therapist (CSV)</button>
+    </section>
+
+    <!-- ── Profile ──────────────────────────────────────────────────── -->
+    <section class="screen" data-screen="profile" hidden>
+      <div class="card rows">
+        <label class="row">
+          <span class="row-label">First Name</span>
+          <input class="row-input" data-field="firstName" placeholder="—" />
+        </label>
+        <label class="row">
+          <span class="row-label">Last Name</span>
+          <input class="row-input" data-field="lastName" placeholder="—" />
+        </label>
+        <label class="row">
+          <span class="row-label">Year of Birth</span>
+          <input
+            class="row-input"
+            type="number"
+            inputmode="numeric"
+            min="1900"
+            max="2026"
+            step="1"
+            placeholder="—"
+            data-field="yearOfBirth"
+          />
+        </label>
+        <label class="row">
+          <span class="row-label">Sex</span>
+          <select class="row-input" data-field="sex">
+            <option value="">—</option>
+            <option>Female</option>
+            <option>Male</option>
+            <option>Intersex</option>
+            <option>Prefer not to say</option>
+          </select>
+        </label>
+        <label class="row">
+          <span class="row-label">Fundamental tone</span>
+          <select class="row-input" data-field="fundamentalNote"></select>
+        </label>
+      </div>
+      <p class="field-note">
+        These appear at the top of the CSV you export, so a therapist knows whose
+        readings they are looking at. Nothing here leaves this device otherwise.
+      </p>
+
+      <h2 class="group-title">Your range</h2>
+      <div class="card rows">
+        <label class="row">
+          <span class="row-label">Lowest note</span>
+          <select class="row-input" data-field="rangeLowNote"></select>
+        </label>
+        <label class="row">
+          <span class="row-label">Highest note</span>
+          <select class="row-input" data-field="rangeHighNote"></select>
+        </label>
+        <label class="row">
+          <span class="row-label">Target note</span>
+          <select class="row-input" data-field="targetNote"></select>
+        </label>
+      </div>
+
+      <h2 class="group-title">Speaking level</h2>
+      <div class="card">
+        <p class="card-body">
+          Talk normally for five seconds. This sets the target on the dial and how
+          loud your tone plays, so you never push your voice to match it.
+        </p>
+        <div class="level" aria-hidden="true"><span data-el="level-fill"></span></div>
+        <p class="card-status" data-el="calibration-status" role="status"></p>
+        <button class="wide-button" data-action="start-calibration">Start listening</button>
+      </div>
+
+      <h2 class="group-title">Tone volume</h2>
+      <div class="card">
+        <p class="card-body">
+          No browser can tell how loud your headphones are turned up, so this is
+          the one part you set yourself.
+        </p>
+        <div class="slider-row">
+          <input
+            class="slider"
+            type="range"
+            min="0.2"
+            max="1.4"
+            step="0.05"
+            data-field="toneVolume"
+            aria-label="Tone volume"
+          />
+          <span class="slider-value" data-el="tone-volume-value">100%</span>
+        </div>
+        <button class="wide-button" data-action="preview-tone">Play your tone</button>
+      </div>
+
+      <h2 class="group-title">Move your setup</h2>
+      <div class="card">
+        <p class="card-body">
+          The extension keeps its own storage and cannot reach this one. Export
+          a settings file there, then load it here.
+        </p>
+        <p class="card-status" data-el="import-status" role="status"></p>
+        <label class="wide-button import-button">
+          Load a settings file
+          <input type="file" accept="application/json,.json" data-field="settingsFile" hidden />
+        </label>
+      </div>
+
+      <button class="wide-button danger" data-action="clear-sessions">Delete all sessions</button>
+
+      <div class="profile-footer">
+        <p class="disclaimer">
+          This app does not replace a speech therapist. If you need to find one in
+          your area, search here.
+        </p>
+        <button class="cta" data-action="find-therapist">Find a speech therapist</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Feather's mic / clock / user, unmodified. Three glyphs people already
+       know: a microphone is what you speak into, a clock is the past, a person
+       is you. Nothing here is worth inventing a new symbol for. -->
+  <nav class="tab-bar">
+    <button class="tab" data-tab="measure" aria-current="page">
+      <span class="tab-icon-wrap">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <line x1="12" y1="19" x2="12" y2="22.5" />
+          <line x1="8" y1="22.5" x2="16" y2="22.5" />
+        </svg>
+        <span class="tab-badge" data-el="recording-badge" hidden>
+          <span class="visually-hidden">Recording</span>
+        </span>
+      </span>
+      <span class="tab-name">Measure</span>
+    </button>
+    <button class="tab" data-tab="history">
+      <span class="tab-icon-wrap">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      </span>
+      <span class="tab-name">History</span>
+    </button>
+    <button class="tab" data-tab="profile">
+      <span class="tab-icon-wrap">
+        <svg class="tab-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      </span>
+      <span class="tab-name">Profile</span>
+    </button>
+  </nav>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

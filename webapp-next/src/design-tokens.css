@@ -1,0 +1,43 @@
+/* The design system, shared by the web app and the extension panel.
+ *
+ * `:root` matches in an ordinary document; `:host` matches inside the panel's
+ * shadow root, where `:root` never will. Declaring both is what lets one file
+ * serve both surfaces — which is the point, since the two drifted into
+ * different palettes once already.
+ */
+:root,
+:host {
+  /* Surfaces, lightest to darkest */
+  --ground: #f0f0f5;
+  --card: #ffffff;
+  --field: #eaeef8;
+  --field-strong: #d8dceb;
+  --line: #e2e2e8;
+
+  /* Text */
+  --ink: #16181d;
+  --ink-2: #6c707a;
+
+  /* One accent. Everything the user is aiming at is this blue: the target
+     note, the range, the live bar, and every primary control. */
+  --accent: #2f6fed;
+  --accent-strong: #2559c4;
+  --accent-soft: #e6edfd;
+  --accent-tint: #cfdcf6;
+
+  /* Semantic, and deliberately not the accent: these say good / attention /
+     danger, which is a different job from "this is the thing you tapped". */
+  --green: #2b8a5a;
+  --warm: #e2622c;
+  --danger: #c8382b;
+
+  /* The pitch chart */
+  --bar-track: #d6d7dd;
+  --bar-track-strong: #c2c3ca;
+  --bar-fill: #4a4a4f;
+
+  /* Shape */
+  --radius-card: 1rem;
+  --radius-inner: 0.8rem;
+  --radius-control: 0.7rem;
+}
