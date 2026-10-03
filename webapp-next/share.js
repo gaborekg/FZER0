@@ -69,8 +69,8 @@ export async function shareFiles(files, title) {
   return 'downloaded';
 }
 
-// Both buttons open the same iOS sheet; two labels so it is obvious that both
-// jobs are possible. The files are built BEFORE this is shown: iOS refuses to
+// Both buttons open the same iOS sheet — Files, WhatsApp, Mail, AirDrop and
+// any other app that takes files. Two labels so keeping a copy is obvious. The files are built BEFORE this is shown: iOS refuses to
 // open the sheet if the tap is spent waiting on storage first.
 export function createShareButtons({ files, title, onShared }) {
   const wrap = document.createElement('div');
@@ -81,7 +81,7 @@ export function createShareButtons({ files, title, onShared }) {
 
   [
     ['Save to Files', 'save'],
-    ['Send by email', 'email'],
+    ['Share', 'share'],
   ].forEach(([label, kind]) => {
     const button = document.createElement('button');
     button.type = 'button';
