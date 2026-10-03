@@ -49,7 +49,6 @@ const MARKUP = `
     </div>
     <div class="measure-side">
       <p class="mic-line" role="status" data-el="mic-line"></p>
-      <button type="button" class="ghost" data-action="mic-on" hidden>Turn on microphone</button>
       <p class="next-line muted" data-el="next-line"></p>
       <section class="card today">
         <h2>Today</h2>
@@ -102,14 +101,12 @@ export function createMeasureScreen(
   const arc = $('.arc');
   const ring = $('[data-el="ring"]');
   const toggle = $('[data-action="toggle"]');
-  const micOnButton = $('[data-action="mic-on"]');
   const micLine = $('[data-el="mic-line"]');
   const noteLine = $('[data-el="note-line"]');
 
   let profile = store.getProfile();
   const mic = createLiveMic(() => profile);
   let visible = false;
-  let micWanted = false;
   let timer = null;
   let takeStartedAt = null;
   let calibrationAtStart = null;
@@ -180,7 +177,7 @@ export function createMeasureScreen(
       },
       // Calibration borrowed the microphone; give it back to Ready.
       onClosed: () => {
-        if (visible && micWanted && isReady() && !shown) turnMicOn();
+        autoMic();
       },
     });
   }
@@ -255,10 +252,9 @@ export function createMeasureScreen(
     $('[data-el="rec-line"]').hidden = !recording;
     if (recording) $('[data-el="clock"]').textContent = `Recording ${clock(Date.now() - takeStartedAt)}`;
 
-    micOnButton.hidden = recording || mic.isOpen();
     micLine.classList.remove('heard', 'silent');
     if (recording) micLine.textContent = '';
-    else if (!mic.isOpen()) micLine.textContent = 'Microphone is off.';
+    else if (!mic.isOpen()) micLine.textContent = 'The microphone turns on when you press Start.';
     else {
       micLine.textContent = r.hearing ? MIC_HEARD : MIC_SILENT;
       micLine.classList.add(r.hearing ? 'heard' : 'silent');
@@ -279,7 +275,6 @@ export function createMeasureScreen(
 
   let micHelpShown = false;
   async function turnMicOn() {
-    micWanted = true;
     try {
       await mic.open();
       // Clear only the mic help: other notes (audio not recorded) must stay.
@@ -292,7 +287,24 @@ export function createMeasureScreen(
     }
     renderLive();
   }
-  micOnButton.addEventListener('click', turnMicOn);
+  // Ready turns the microphone on by itself, so the therapist can see it
+  // hears the patient before Start. Browsers only allow that once the page
+  // has had a tap (otherwise the audio stays paused, or the open hangs), so it
+  // waits for one: switching to Measure, Done, Record another, or any tap on
+  // this screen. A failure stays quiet here; Start shows the help.
+  const mayOpenMic = () => navigator.userActivation?.hasBeenActive === true;
+  async function autoMic() {
+    if (!visible || shown || listening || mic.isOpen() || !isReady() || !mayOpenMic()) return;
+    try {
+      await mic.open();
+    } catch {
+      // Start will ask again and explain.
+    }
+    renderLive();
+  }
+  // Capture phase, inside this screen only: the tap that counts as
+  // permission is the same one that opens the mic.
+  root.addEventListener('click', () => autoMic(), true);
 
   async function requestWakeLock() {
     if (!('wakeLock' in navigator)) return;
@@ -501,6 +513,7 @@ export function createMeasureScreen(
     if (shown) pending = { kind, ...shown };
     shown = null;
     render();
+    autoMic();
   }
 
   function discardShown() {
@@ -558,7 +571,7 @@ export function createMeasureScreen(
       visible = true;
       profile = store.getProfile();
       render();
-      if (micWanted && isReady() && !shown) await turnMicOn();
+      await autoMic();
     },
     // Leaving Measure lets go of the microphone, unless a take is running.
     async hide() {
