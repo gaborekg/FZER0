@@ -2,7 +2,7 @@
 // day. The day names its own recordings; a recording opens in a sheet with
 // its figures, player, name field and Delete.
 import { groupDays, describeSemitones, describeDb } from './src/day-groups.js';
-import { summariseProgress } from './src/progress.js';
+import { summariseProgress, towardsTarget as tone } from './src/progress.js';
 import { hzToNote, noteToHz } from './src/note-hz.js';
 import { buildSessionsCsv } from './src/session-csv.js';
 import { getAudio, deleteAudio } from './app/audio-store.js';
@@ -24,17 +24,6 @@ const shortDay = (key) => {
 };
 const time = (ms) => new Date(ms).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 const note = (hz) => (hz ? hzToNote(hz) : '—');
-// Colour says whether the voice moved towards this patient's own target —
-// green closer, orange further — never that lower or higher is better.
-const distance = (hz, targetHz) => Math.abs(12 * Math.log2(hz / targetHz));
-function tone(fromHz, toHz, targetHz) {
-  if (!fromHz || !toHz || !targetHz) return '';
-  const closer = distance(fromHz, targetHz) - distance(toHz, targetHz);
-  if (closer > 0.05) return 'good';
-  if (closer < -0.05) return 'warn';
-  return '';
-}
-
 function el(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;

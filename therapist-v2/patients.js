@@ -1,6 +1,7 @@
 // The start screen: the therapist's patients, by name. Adding asks only for
 // the name; the patient's Profile opens next for everything else.
 import { createPatientList, fullName } from './src/patient-list.js';
+import { patientSummary } from './src/patient-summary.js';
 
 const NAMESPACE = 'fzer0t2';
 const patients = createPatientList(window.localStorage, { namespace: NAMESPACE });
@@ -31,9 +32,21 @@ function renderList() {
       const link = document.createElement('a');
       link.className = 'cell';
       link.href = `patient.html?id=${encodeURIComponent(id)}`;
-      link.innerHTML = `<span class="cell-title"></span>${CHEVRON}`;
+      link.innerHTML = `<span class="cell-title"><span class="patient-name"></span></span>${CHEVRON}`;
+      const title = link.querySelector('.cell-title');
       // textContent: names are typed by a person.
-      link.querySelector('.cell-title').textContent = fullName(profile) || 'Unnamed patient';
+      title.firstElementChild.textContent = fullName(profile) || 'Unnamed patient';
+
+      // Where things stood: the last session day, and its start against the
+      // first day's start. The same figures History shows.
+      const summary = patientSummary(patients.storeFor(id).listSessions(), profile.targetNote);
+      const lines = summary ? [summary.last, summary.overall].filter(Boolean) : [{ text: 'No recordings yet', tone: '' }];
+      lines.forEach(({ text, tone }) => {
+        const line = document.createElement('small');
+        line.className = `summary ${tone}`.trim();
+        line.textContent = text;
+        title.appendChild(line);
+      });
       li.appendChild(link);
       return li;
     })

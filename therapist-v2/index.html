@@ -13,10 +13,6 @@
 <body>
   <header class="nav">
     <div class="nav-bar">
-      <span></span>
-      <button type="button" class="nav-button" data-action="add-patient" aria-label="Add patient">
-        <svg class="plus" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16" /></svg>
-      </button>
     </div>
     <h1 class="large-title">Patients</h1>
   </header>
@@ -24,13 +20,15 @@
   <main class="page">
     <section class="group" data-el="list-group">
       <ul class="list" data-el="patient-list"></ul>
-      <p class="list-footer">Data stays on this device. Protect it with a passcode.</p>
     </section>
     <div class="empty-state" data-el="empty" hidden>
       <strong>No Patients</strong>
-      Tap + to add your first patient.
-      <p class="list-footer" style="margin: 16px 0 0">Data stays on this device. Protect it with a passcode.</p>
+      Add your first patient to start.
     </div>
+    <div class="page-actions">
+      <button type="button" class="btn-filled" data-action="add-patient">Add Patient</button>
+    </div>
+    <p class="list-footer">Data stays on this device. Protect it with a passcode.</p>
   </main>
 
   <dialog class="sheet" data-el="add-sheet" aria-labelledby="add-title">

@@ -36,3 +36,15 @@ export function summariseProgress(days) {
     previousIsFirst: days.length === 2,
   };
 }
+
+// Whether a move went towards the patient's own target: 'good' closer,
+// 'warn' further, '' no clear change or nothing to compare. Never a judgement
+// that lower or higher is better in itself.
+const distanceTo = (hz, targetHz) => Math.abs(12 * Math.log2(hz / targetHz));
+export function towardsTarget(fromHz, toHz, targetHz) {
+  if (!fromHz || !toHz || !targetHz) return '';
+  const closer = distanceTo(fromHz, targetHz) - distanceTo(toHz, targetHz);
+  if (closer > 0.05) return 'good';
+  if (closer < -0.05) return 'warn';
+  return '';
+}

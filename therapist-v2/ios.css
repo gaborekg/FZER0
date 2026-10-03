@@ -221,3 +221,10 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.4); }
 .cell input[type='number'] { -moz-appearance: textfield; }
 .cell input[type='number']::-webkit-inner-spin-button,
 .cell input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Patients list: name with a two-line summary, and the Add button below. */
+.patient-name { display: block; overflow: hidden; text-overflow: ellipsis; }
+.cell-title small.summary { overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.cell-title small.summary.good { color: var(--green); }
+.cell-title small.summary.warn { color: var(--orange); }
+.page-actions { margin: 24px 16px 0; }
