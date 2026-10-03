@@ -2,7 +2,7 @@
 // that counts; English is a translation for reference.
 import { LANG } from './i18n.js';
 
-const DOCS = ['privacy', 'imprint', 'consent', 'info'];
+const DOCS = ['privacy', 'imprint', 'consent', 'info', 'paragraph'];
 const PRINTABLE = ['consent', 'info'];
 const params = new URLSearchParams(window.location.search);
 const doc = DOCS.includes(params.get('doc')) ? params.get('doc') : 'privacy';
@@ -24,7 +24,7 @@ back.addEventListener('click', (event) => {
 
 // Practice documents have empty lines the practice fills in by hand; the
 // website's own texts still carry [placeholders] for the provider.
-const practiceDoc = ['consent', 'info'].includes(doc);
+const practiceDoc = ['consent', 'info', 'paragraph'].includes(doc);
 document.querySelector('[data-el="draft"]').textContent = practiceDoc
   ? de
     ? 'Entwurf: vor der Nutzung von einer/einem Datenschutzbeauftragten prüfen lassen.'
@@ -43,4 +43,23 @@ if (PRINTABLE.includes(doc)) {
   print.hidden = false;
   print.textContent = de ? 'Drucken' : 'Print';
   print.addEventListener('click', () => window.print());
+}
+
+// The paragraph is meant to be pasted into the practice's own privacy
+// information. The copy keeps it as plain text.
+const copy = article.querySelector('[data-action="copy"]');
+if (copy) {
+  copy.addEventListener('click', async () => {
+    const text = article.querySelector('[data-el="copy-source"]').innerText.trim();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // No clipboard access: select the text so it can be copied by hand.
+      const range = document.createRange();
+      range.selectNodeContents(article.querySelector('[data-el="copy-source"]'));
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+    }
+    article.querySelector('[data-el="copied"]').hidden = false;
+  });
 }

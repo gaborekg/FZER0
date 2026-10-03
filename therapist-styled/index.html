@@ -32,7 +32,7 @@
     <div class="page-actions">
       <button type="button" class="cream" data-action="add-patient" data-i18n="patients.add">Add patient</button>
     </div>
-    <p class="footnote"><span data-i18n="patients.footnote">Data stays on this device. FZero saves no information.</span> <a href="legal.html?doc=privacy" data-i18n="legal.privacy">Privacy</a> · <a href="legal.html?doc=imprint" data-i18n="legal.imprint">Imprint</a></p>
+    <p class="footnote"><span data-i18n="patients.footnote">Data stays on this device. Nothing is sent to FZero.</span> <a href="legal.html?doc=privacy" data-i18n="legal.privacy">Privacy</a> · <a href="legal.html?doc=imprint" data-i18n="legal.imprint">Imprint</a></p>
   </div>
 
   <dialog class="sheet" data-el="add-sheet" aria-labelledby="add-title">
@@ -41,10 +41,9 @@
     <label class="field"><span data-i18n="add.first">First name</span><input data-field="firstName" maxlength="40" autocomplete="off" /></label>
     <label class="field"><span data-i18n="add.last">Last name</span><input data-field="lastName" maxlength="40" autocomplete="off" /></label>
     <label class="check-field"><input type="checkbox" data-field="consent" /><span><span data-i18n="add.consent">Signed consent for voice recordings is on file</span><small class="muted" data-i18n="add.consentHint"></small></span></label>
-    <p class="sheet-text" data-i18n="add.hint">Year of birth, voice and calibration come next, in the patient's Profile.</p>
     <div class="sheet-actions">
       <button type="button" class="ghost" data-action="cancel-add" data-i18n="common.cancel">Cancel</button>
-      <button type="button" class="cream" data-action="save-patient" disabled data-i18n="patients.add">Add patient</button>
+      <button type="button" class="cream" data-action="save-patient" disabled data-i18n="add.cta">Add patient's info</button>
     </div>
   </dialog>
 

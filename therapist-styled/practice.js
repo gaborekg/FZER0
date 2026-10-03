@@ -20,5 +20,4 @@ export function savePractice(patch) {
 export const isHomeScreen = () =>
   window.navigator.standalone === true || window.matchMedia?.('(display-mode: standalone)').matches === true;
 
-export const safetyDone = () =>
-  Boolean(getPractice().passcodeConfirmedAt) && Boolean(getPractice().documentsConfirmedAt) && isHomeScreen();
+export const safetyDone = () => Boolean(getPractice().passcodeConfirmedAt) && isHomeScreen();

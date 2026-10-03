@@ -269,6 +269,9 @@ audio { width: 100%; }
 
 /* --- Practice and legal pages ---------------------------------------------- */
 .block { display: block; margin-top: 2px; }
+.copy-box { padding: 18px 20px; margin: 12px 0 14px; }
+.copy-box p { margin: 0; }
+.legal article .cream { min-width: 200px; }
 .hand-block { display: flex; flex-direction: column; gap: 14px; margin: 12px 0 18px; }
 .hand-line { display: flex; flex-direction: column; gap: 2px; }
 .hand-line small { color: var(--muted); font-size: 12px; }

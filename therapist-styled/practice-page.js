@@ -24,11 +24,6 @@ function render() {
   const button = passcode.querySelector('[data-action="confirm-passcode"]');
   button.hidden = confirmed;
 
-  const signed = document.querySelector('[data-el="signed"]');
-  const signedDone = Boolean(getPractice().documentsConfirmedAt);
-  mark(signed, signedDone);
-  signed.querySelector('[data-action="confirm-signed"]').hidden = signedDone;
-
   const home = isHomeScreen();
   mark(document.querySelector('[data-el="homescreen"]'), home);
   document.querySelector('[data-el="homescreen-hint"]').textContent = t(home ? 'pr.homescreenOk' : 'pr.homescreenHint');
@@ -36,11 +31,6 @@ function render() {
 
 document.querySelector('[data-action="confirm-passcode"]').addEventListener('click', () => {
   savePractice({ passcodeConfirmedAt: Date.now() });
-  render();
-});
-
-document.querySelector('[data-action="confirm-signed"]').addEventListener('click', () => {
-  savePractice({ documentsConfirmedAt: Date.now() });
   render();
 });
 
