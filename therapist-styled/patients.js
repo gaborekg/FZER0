@@ -11,7 +11,9 @@ document.title = t('patients.pageTitle');
 
 // The language of the app on this device.
 document.querySelectorAll('[data-lang]').forEach((button) => {
+  // Exactly one button is marked: the language the app is showing.
   if (button.dataset.lang === LANG) button.setAttribute('aria-current', 'true');
+  else button.removeAttribute('aria-current');
   button.addEventListener('click', () => {
     if (button.dataset.lang !== LANG) setLang(button.dataset.lang);
   });
