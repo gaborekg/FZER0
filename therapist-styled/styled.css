@@ -93,9 +93,9 @@ button:disabled { opacity: 0.45; cursor: default; }
 
 /* --- Patients --------------------------------------------------------------- */
 .wordmark { align-self: center; font-weight: 700; font-size: 20px; letter-spacing: 0.02em; }
-.patients-top { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; }
+.patients-top { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; }
 .patients-top .wordmark { justify-self: center; }
-.gear { color: var(--ink); text-decoration: none; }
+.patients-top .lang-switch { justify-self: end; }
 .topbar [data-action="print"] { justify-self: end; min-width: 140px; }
 .safety-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; padding: 14px 18px; text-decoration: none; border-color: rgba(240, 192, 138, 0.45); }
 .safety-banner > span:first-child { color: var(--warn); }
@@ -280,7 +280,7 @@ audio { width: 100%; }
 .blank.inline.wide { min-width: 340px; }
 @media print { .hand-line .blank, .blank.inline { border-color: #000; } .hand-line small { color: #444; } }
 .tab[aria-current='true'] { background: var(--cream); color: var(--on-cream); }
-.lang-switch { justify-self: start; align-self: flex-start; }
+.lang-switch .tab { min-height: 36px; padding: 0 12px; font-size: 13px; }
 .doc-link { text-decoration: none; color: var(--ink); min-height: 56px; }
 .row-note.warn { color: var(--warn); }
 .draft-note, .translation-note { margin: 0; padding: 12px 16px; border-radius: 14px; background: rgba(240, 192, 138, 0.1); color: var(--warn); font-size: 14px; }
@@ -305,7 +305,10 @@ audio { width: 100%; }
 @media (max-width: 899px) {
   .topbar { grid-template-columns: auto minmax(0, 1fr); }
   .topbar-title { text-align: right; }
-  .tabs { grid-column: 1 / -1; justify-self: stretch; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .topbar .tabs { grid-column: 1 / -1; justify-self: stretch; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .patients-top { grid-template-columns: auto 1fr; }
+  .patients-top > span:first-child { display: none; }
+  .patients-top .wordmark { justify-self: start; }
   /* History rows: zone words under the name, rename button on the right. */
   .take { grid-template-columns: minmax(0, 1fr) 44px; row-gap: 4px; }
   .take > .zone-line { grid-column: 1; grid-row: 2; }

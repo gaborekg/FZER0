@@ -4,10 +4,18 @@ import { createPatientList, fullName } from './src/patient-list.js';
 import { groupDays } from './src/day-groups.js';
 import { shortWords, shapeColour, textColour } from './zone.js';
 import { takeOff, sinceFirstDay } from './take-stats.js';
-import { t, applyStatic, shortDate as shortDay } from './i18n.js';
+import { t, applyStatic, setLang, LANG, shortDate as shortDay } from './i18n.js';
 
 applyStatic();
 document.title = t('patients.pageTitle');
+
+// The language of the app on this device.
+document.querySelectorAll('[data-lang]').forEach((button) => {
+  if (button.dataset.lang === LANG) button.setAttribute('aria-current', 'true');
+  button.addEventListener('click', () => {
+    if (button.dataset.lang !== LANG) setLang(button.dataset.lang);
+  });
+});
 const span = (className, text) => {
   const node = document.createElement('span');
   if (className) node.className = className;

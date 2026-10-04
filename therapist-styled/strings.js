@@ -69,7 +69,6 @@ export const STRINGS = {
     'patients.empty': 'No patients yet',
     'patients.emptyHint': 'Add your first patient to start.',
     'patients.footnote': 'Data stays on this device. Nothing is sent to FZero.',
-    'patients.practice': 'Practice settings',
     'card.noRecordings': 'No recordings yet',
     'card.lastSession': 'Last session {d}, ended:',
     'card.firstDay': 'First day · target {t}',
@@ -224,10 +223,7 @@ export const STRINGS = {
     'p.confirmDeleteAll': ({ n, name }) => `Delete all ${n} recording${n === 1 ? '' : 's'} of ${name}? This cannot be undone.`,
 
     // --- Practice
-    'pr.pageTitle': 'Practice · FZero',
-    'pr.title': 'Practice',
     'legal.title': 'Legal',
-    'pr.language': 'Language',
   },
 
   de: {
@@ -287,7 +283,6 @@ export const STRINGS = {
     'patients.empty': 'Noch keine Patienten',
     'patients.emptyHint': 'Fügen Sie Ihren ersten Patienten hinzu.',
     'patients.footnote': 'Die Daten bleiben auf diesem Gerät. Nichts wird an FZero gesendet.',
-    'patients.practice': 'Praxis-Einstellungen',
     'card.noRecordings': 'Noch keine Aufnahmen',
     'card.lastSession': 'Letzte Sitzung {d}, Ende:',
     'card.firstDay': 'Erster Tag · Zielton {t}',
@@ -439,9 +434,6 @@ export const STRINGS = {
         ? `Die Aufnahme von ${name} löschen? Das lässt sich nicht rückgängig machen.`
         : `Alle ${n} Aufnahmen von ${name} löschen? Das lässt sich nicht rückgängig machen.`,
 
-    'pr.pageTitle': 'Praxis · FZero',
-    'pr.title': 'Praxis',
     'legal.title': 'Rechtliches',
-    'pr.language': 'Sprache',
   },
 };
