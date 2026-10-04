@@ -2,10 +2,11 @@
 // that counts; English is a translation for reference.
 import { LANG } from './i18n.js';
 
-const DOCS = ['privacy', 'imprint', 'consent', 'info', 'paragraph'];
+const DOCS = ['index', 'privacy', 'imprint', 'consent', 'info', 'paragraph'];
 const PRINTABLE = ['consent', 'info'];
 const params = new URLSearchParams(window.location.search);
-const doc = DOCS.includes(params.get('doc')) ? params.get('doc') : 'privacy';
+// Without ?doc= this is the Legal page from the footer: a list of everything.
+const doc = DOCS.includes(params.get('doc')) ? params.get('doc') : 'index';
 
 const article = document.querySelector(`article[data-doc="${doc}"][data-lang="${LANG}"]`);
 article.hidden = false;
@@ -14,17 +15,13 @@ document.title = `${article.querySelector('h1').textContent} · FZero`;
 
 const de = LANG === 'de';
 const back = document.querySelector('[data-el="back"]');
-back.textContent = de ? '‹ Zurück' : '‹ Back';
-back.addEventListener('click', (event) => {
-  if (window.history.length > 1) {
-    event.preventDefault();
-    window.history.back();
-  }
-});
+// The list goes back to Patients; a document goes back to the list.
+back.textContent = doc === 'index' ? (de ? '‹ Patienten' : '‹ Patients') : de ? '‹ Rechtliches' : '‹ Legal';
+if (doc !== 'index') back.href = 'legal.html';
 
 // Practice documents have empty lines the practice fills in by hand; the
 // website's own texts still carry [placeholders] for the provider.
-const practiceDoc = ['consent', 'info', 'paragraph'].includes(doc);
+const practiceDoc = ['index', 'consent', 'info', 'paragraph'].includes(doc);
 document.querySelector('[data-el="draft"]').textContent = practiceDoc
   ? de
     ? 'Entwurf: vor der Nutzung von einer/einem Datenschutzbeauftragten prüfen lassen.'
@@ -32,7 +29,9 @@ document.querySelector('[data-el="draft"]').textContent = practiceDoc
   : de
     ? 'Entwurf: Text in [eckigen Klammern] ergänzen und vor der Nutzung von einer/einem Datenschutzbeauftragten prüfen lassen.'
     : 'Draft: fill in the text in [square brackets] and have it checked by a data protection officer before use.';
-if (!de) {
+// The list itself needs no notes; the documents carry them.
+if (doc === 'index') document.querySelector('[data-el="draft"]').hidden = true;
+if (!de && doc !== 'index') {
   const note = document.querySelector('[data-el="translation"]');
   note.hidden = false;
   note.textContent = 'English translation for reference. The German version applies.';

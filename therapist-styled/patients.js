@@ -5,11 +5,9 @@ import { groupDays } from './src/day-groups.js';
 import { shortWords, shapeColour, textColour } from './zone.js';
 import { takeOff, sinceFirstDay } from './take-stats.js';
 import { t, applyStatic, shortDate as shortDay } from './i18n.js';
-import { safetyDone } from './practice.js';
 
 applyStatic();
 document.title = t('patients.pageTitle');
-document.querySelector('[data-el="safety"]').hidden = safetyDone();
 const span = (className, text) => {
   const node = document.createElement('span');
   if (className) node.className = className;
