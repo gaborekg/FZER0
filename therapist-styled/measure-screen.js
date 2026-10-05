@@ -13,6 +13,8 @@ import { arcSvg, paintArc, lineScaleSvg } from './scale.js';
 import { offFrom, liveWords, textColour, shapeColour, distanceWords, shortWords, clock, hueFor } from './zone.js';
 import { takeValues, SHORT_KEYS, takeOff, changeSentence } from './take-stats.js';
 import { openCalibration } from './calibration.js';
+import { openMicMatch } from './mic-match.js';
+import { lastMic, matchFor } from './spl.js';
 import { stepWithHysteresis } from './pitch-smoother.js';
 import { t, clockTime, recordingName } from './i18n.js';
 
@@ -50,6 +52,7 @@ const MARKUP = `
     <div class="measure-side">
       <p class="mic-line" role="status" data-el="mic-line"></p>
       <p class="next-line muted" data-el="next-line"></p>
+      <p class="match-line" data-el="match-line"><span class="muted" data-el="match-text"></span><button type="button" class="link" data-action="match"></button></p>
       <section class="card today">
         <h2>${t('m.today')}</h2>
         <p class="muted" data-el="no-takes" style="margin: 0">${t('m.noTakes')}</p>
@@ -180,6 +183,26 @@ export function createMeasureScreen(
     });
   }
   $('[data-action="calibrate"]').addEventListener('click', calibrate);
+
+  // dB shown like a sound meter needs this microphone matched once.
+  function renderMatch() {
+    const mic = lastMic();
+    const matched = mic && matchFor(mic);
+    $('[data-el="match-text"]').textContent = matched ? t('mm.matched', { mic }) : t('mm.notMatched');
+    $('[data-action="match"]').textContent = t(matched ? 'mm.again' : 'mm.open');
+  }
+  $('[data-action="match"]').addEventListener('click', () => {
+    if (isBusy() || listening) return;
+    openMicMatch({
+      beforeListen: () => mic.close(),
+      onListeningChange: (on) => {
+        listening = on;
+        toggle.disabled = on;
+        onListeningChange(on);
+      },
+      onSaved: renderMatch,
+    });
+  });
   root.querySelectorAll('[data-action="open-profile"]').forEach((button) => button.addEventListener('click', () => onOpenProfile()));
 
   // --- live view --------------------------------------------------------------
@@ -190,6 +213,7 @@ export function createMeasureScreen(
     const today = groupDays(sessions).find((day) => day.key === dayKey(Date.now()));
     const recs = today ? today.recordings : [];
     $('[data-el="next-line"]').textContent = t(recs.length === 0 ? 'm.nextBefore' : 'm.nextAfter');
+    renderMatch();
     $('[data-el="no-takes"]').hidden = recs.length > 0;
     $('[data-el="today-list"]').replaceChildren(
       ...recs.map((rec) => {
@@ -250,6 +274,7 @@ export function createMeasureScreen(
     $('[data-el="rec-line"]').hidden = !recording;
     if (recording) $('[data-el="clock"]').textContent = t('m.recording', { time: clock(Date.now() - takeStartedAt) });
 
+    $('[data-el="match-line"]').hidden = recording;
     micLine.classList.remove('heard', 'silent');
     if (recording) micLine.textContent = '';
     else if (!mic.isOpen()) micLine.textContent = t('m.micOff');

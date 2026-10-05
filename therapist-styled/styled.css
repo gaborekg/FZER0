@@ -140,6 +140,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
 .sheet-grip { align-self: center; width: 40px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.24); }
 .sheet-title { margin: 4px 0 0; text-align: center; font-size: 26px; font-weight: 300; }
 .sheet-text { margin: 0; text-align: center; font-size: 16px; line-height: 1.45; color: var(--muted); }
+.sheet-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 8px; font-size: 16px; line-height: 1.45; color: var(--muted); }
 .sheet-status { margin: 0; min-height: 22px; text-align: center; font-size: 16px; }
 .sheet-actions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 12px; margin-top: 4px; }
 .sheet-actions.single { grid-template-columns: minmax(0, 1fr); }
@@ -182,6 +183,8 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
 .mic-line.heard { color: var(--ok); }
 .mic-line.silent { color: var(--warn); }
 .next-line { margin: 0; font-size: 15px; }
+.match-line { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 15px; }
+.match-line .link { padding: 0; }
 .today { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
 .today h2 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
 .today ul { list-style: none; margin: 0; padding: 0; }

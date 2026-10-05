@@ -8,7 +8,7 @@ import { shareFiles } from './app/share.js';
 import { filesForDay } from './day-share.js';
 import { lineScaleSvg } from './scale.js';
 import { distanceWords, shortWords, sideWords, textColour, shapeColour } from './zone.js';
-import { takeValues, takeOff, closerWords, closerPhrase, louderPhrase } from './take-stats.js';
+import { takeValues, takeOff, closerWords, closerPhrase, louderPhrase, hasRealDb } from './take-stats.js';
 import { t, shortDate, clockTime, recordingName } from './i18n.js';
 
 const shortDay = shortDate;
@@ -226,7 +226,8 @@ export function createHistoryScreen(root, { store, getPatient }) {
     head.appendChild(el('h2', '', dayTitle(day.key)));
     if (day.recordings.length > 1) {
       // First take of the day against the last: "1 semitone (0.5 tones) closer · 3 dB louder"
-      const parts = [closerPhrase(off(day.first), off(day.last)), louderPhrase(day.comparison?.volumeDb)].filter(Boolean);
+      const realDb = hasRealDb(day.first) && hasRealDb(day.last);
+      const parts = [closerPhrase(off(day.first), off(day.last)), realDb ? louderPhrase(day.comparison?.volumeDb) : ''].filter(Boolean);
       head.appendChild(el('span', 'muted day-change', parts.join(' · ')));
     }
     block.appendChild(head);

@@ -6,6 +6,10 @@ import { clock, offFrom, semitonesAndTones } from './zone.js';
 import { t, num } from './i18n.js';
 
 const known = (v) => v !== null && v !== undefined;
+// Volume is only shown for takes measured in real dB; takes from before
+// that used a different scale. "≈" marks a microphone not matched yet.
+export const hasRealDb = (s) => s.dbScale === 'spl';
+const dbText = (s, v) => (hasRealDb(s) && known(v) ? `${s.dbMatched ? '' : '≈ '}${Math.round(v)} dB` : '—');
 
 export function takeValues(s) {
   const target = s.targetNote || t('v.target');
@@ -15,8 +19,8 @@ export function takeValues(s) {
     { key: 'spread', label: t('v.spread'), value: known(s.semitoneSd) ? t('v.spreadValue', { x: num(s.semitoneSd.toFixed(1)) }) : '—' },
     { key: 'range', label: t('v.range'), value: s.p5Hz && s.p95Hz ? `${hzToNote(s.p5Hz)} – ${hzToNote(s.p95Hz)}` : '—' },
     { key: 'speaking', label: t('v.speaking'), value: t('v.of', { a: clock(s.voicedMs ?? 0), b: clock(s.durationMs ?? 0) }) },
-    { key: 'volume', label: t('v.volume'), value: known(s.meanDb) ? `${Math.round(s.meanDb)} dB` : '—' },
-    { key: 'loudest', label: t('v.loudest'), value: known(s.maxDb) ? `${Math.round(s.maxDb)} dB` : '—' },
+    { key: 'volume', label: t('v.volume'), value: dbText(s, s.meanDb) },
+    { key: 'loudest', label: t('v.loudest'), value: dbText(s, s.maxDb) },
     // Recorded with zoneNotes = [target], so inZoneShare is the share of
     // speaking time on the target note (within half a semitone).
     {

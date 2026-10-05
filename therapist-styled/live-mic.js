@@ -1,16 +1,15 @@
-// The microphone for Measure. It opens on Ready, so the therapist can see it
-// hears the patient before anything is recorded. After Start the same stream
-// feeds the take: one microphone, not two.
+// The microphone for Measure. It opens on Start and closes on Stop; the same
+// stream feeds the take and its audio: one microphone, not two.
 import { createNoiseFloor } from './src/noise-floor.js';
 import { classifyFrame } from './src/gate.js';
 import { volumeLevel } from './src/gauge.js';
-import { dbFromLevel } from './src/db-meter.js';
 import { hzToNote } from './src/note-hz.js';
 import { createSessionRecorder } from './src/session-recorder.js';
 import { VOLUME_CEILING_RMS } from './src/config.js';
 import { startCapture } from './app/audio.js';
 import { canRecordAudio, startAudioRecording } from './app/audio-recorder.js';
 import { createPitchSmoother } from './pitch-smoother.js';
+import { createSplMeter, micOf, rememberMic, volumeFields } from './spl.js';
 
 // A voice heard within this long still counts as "hearing the patient".
 const HEARD_FOR_MS = 800;
@@ -25,8 +24,9 @@ export function createLiveMic(getProfile) {
   let noiseFloor = createNoiseFloor();
   let recorder = null;
   let audio = null;
+  let spl = null;
   const smoother = createPitchSmoother();
-  let last = { level: 0, db: null, heardAtMs: 0 };
+  let last = { level: 0, heardAtMs: 0 };
 
   function onFrame(frame) {
     const now = Date.now();
@@ -35,18 +35,17 @@ export function createLiveMic(getProfile) {
     const classified = classifyFrame(frame, { floorRms });
     const ceilingRms = getProfile().volumeCeilingRms ?? VOLUME_CEILING_RMS;
     const level = volumeLevel(frame.rms, { floorRms, ceilingRms });
-    const db = dbFromLevel(level);
     const voiced = classified.category === 'voiced';
+    spl?.add(frame.rms, voiced, now);
     if (voiced) smoother.add(classified.hz, now);
     const ease = level > last.level ? LEVEL_ATTACK : LEVEL_RELEASE;
     last = {
       level: last.level + (level - last.level) * ease,
-      db,
       heardAtMs: voiced ? now : last.heardAtMs,
     };
     // Driven from here, not from a timer: a hidden tab slows timers down but
-    // keeps delivering audio frames.
-    recorder?.observe({ note: voiced ? hzToNote(classified.hz) : null, hz: voiced ? classified.hz : null, db }, now);
+    // keeps delivering audio frames. Volume is measured by spl.js instead.
+    recorder?.observe({ note: voiced ? hzToNote(classified.hz) : null, hz: voiced ? classified.hz : null, db: null }, now);
   }
 
   return {
@@ -58,7 +57,7 @@ export function createLiveMic(getProfile) {
             capture = c;
             noiseFloor = createNoiseFloor();
             smoother.reset();
-            last = { level: 0, db: null, heardAtMs: 0 };
+            last = { level: 0, heardAtMs: 0 };
           })
           .finally(() => {
             opening = null;
@@ -83,6 +82,7 @@ export function createLiveMic(getProfile) {
     },
     startTake(notes) {
       recorder = createSessionRecorder(notes);
+      spl = createSplMeter();
       audio = null;
       let audioFailed = !canRecordAudio();
       if (!audioFailed) {
@@ -99,8 +99,12 @@ export function createLiveMic(getProfile) {
     async stopTake(finishOptions) {
       const blob = audio ? await audio.stop().catch(() => null) : null;
       audio = null;
-      const summary = recorder ? recorder.finish(finishOptions) : null;
+      const finished = recorder ? recorder.finish(finishOptions) : null;
+      const mic = micOf(capture?.stream);
+      rememberMic(mic);
+      const summary = finished ? { ...finished, ...volumeFields(spl.result(), mic) } : null;
       recorder = null;
+      spl = null;
       return { summary, blob };
     },
     isTaking: () => recorder !== null,
